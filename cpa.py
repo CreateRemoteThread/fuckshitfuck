@@ -2,6 +2,7 @@
 
 import numpy as np
 from scipy.signal import butter, lfilter, freqz
+import matplotlib.pyplot as plt
 from numpy import *
 import sys
 import glob
@@ -80,6 +81,8 @@ def deriveKey(data,plaintexts):
         sumden2 = sumden2 + tdiff * tdiff        
       cpaoutput[kguess] = sumnum / np.sqrt(sumden1 * sumden2)
       maxcpa[kguess] = max(abs(cpaoutput[kguess])) 
+    print maxcpa
+    print maxcpa[np.argmax(maxcpa)]
     bestguess[bnum] = np.argmax(maxcpa)
   return bestguess
 
