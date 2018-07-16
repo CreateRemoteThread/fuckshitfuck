@@ -80,9 +80,10 @@ def deriveKey(data,plaintexts):
         sumden1 = sumden1 + hdiff * hdiff
         sumden2 = sumden2 + tdiff * tdiff        
       cpaoutput[kguess] = sumnum / np.sqrt(sumden1 * sumden2)
-      maxcpa[kguess] = max(abs(cpaoutput[kguess])) 
-    print maxcpa
-    print maxcpa[np.argmax(maxcpa)]
+      maxcpa[kguess] = max(abs(cpaoutput[kguess]))
+    # print maxcpa
+    # print maxcpa[np.argmax(maxcpa)]
+    plt.plot(range(0,256),maxcpa)
     bestguess[bnum] = np.argmax(maxcpa)
   return bestguess
 
@@ -98,3 +99,7 @@ if __name__ == "__main__":
   print "Stage 3: Deriving key... wish me luck!"
   r = deriveKey(data,plaintexts)
   print "Done: Recovered key %s" % ["%02x" % rx for rx in r]
+  plt.title("AES SubKey Correlation Overview")
+  plt.ylabel("Correlation")
+  plt.xlabel("Hypothesis")
+  plt.show()
