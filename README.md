@@ -1,5 +1,3 @@
-# ireallyneedanewoscilloscope
+# AES Side Channel against ATMega328p
 
-picoscope 2206b
-atmega328p with tiny-aes and static key
-breadboard is above power supply
+This repository is for side channel attack stuff.
