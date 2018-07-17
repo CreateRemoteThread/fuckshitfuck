@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=pictarget.X
+PROJECTNAME=pictarget-2.X
 
 # Active Configuration
 DEFAULTCONF=default
