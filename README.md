@@ -1,3 +1,7 @@
-# AES Side Channel against ATMega328p
+# Side Channels 'n' Stuff
 
-This repository is for side channel attack stuff.
+![Just for fun](fun/cap.png)
+
+This repository contains my work on side channel attacks, across a variety of targets and algorithms.
+
+This code is provided as-is.
