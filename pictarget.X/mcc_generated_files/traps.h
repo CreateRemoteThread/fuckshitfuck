@@ -1,25 +1,25 @@
 /**
-  Generated Main Source File
+  System Traps Generated Driver File 
 
-  Company:
+  @Company:
     Microchip Technology Inc.
 
-  File Name:
-    main.c
+  @File Name:
+    traps.h
 
-  Summary:
-    This is the main file generated using PIC24 / dsPIC33 / PIC32MM MCUs
+  @Summary:
+    This is the generated driver implementation file for handling traps
+    using PIC24 / dsPIC33 / PIC32MM MCUs
 
-  Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
-    Generation Information :
+  @Description:
+    This source file provides implementations for PIC24 / dsPIC33 / PIC32MM MCUs traps.
+    Generation Information : 
         Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - pic24-dspic-pic32mm : 1.55
         Device            :  PIC24FJ64GB002
     The generated drivers are tested against the following:
         Compiler          :  XC16 v1.34
         MPLAB             :  MPLAB X v4.15
 */
-
 /*
     (c) 2016 Microchip Technology Inc. and its subsidiaries. You may use this
     software and any derivatives exclusively with Microchip products.
@@ -42,24 +42,45 @@
     TERMS.
 */
 
-#include "mcc_generated_files/mcc.h"
+#ifndef _TRAPS_H
+#define _TRAPS_H
 
-/*
-                         Main application
- */
-int main(void)
-{
-    // initialize the device
-    SYSTEM_Initialize();
-    UART1_Initialize();
+#include <stdint.h>
 
-    while (1)
-    {
-        printf("lol\n");
-    }
-
-    return -1;
-}
 /**
- End of File
+ * Error codes
+ */
+typedef enum 
+{
+    /* ----- Traps ----- */
+    TRAPS_OSC_FAIL = 0, /** Oscillator Fail Trap vector */
+    TRAPS_STACK_ERR = 1, /** Stack Error Trap vector */
+    TRAPS_ADDRESS_ERR = 2, /** Address error Trap vector */
+    TRAPS_MATH_ERR = 3, /** Math Error Trap vector */
+} TRAPS_ERROR_CODE;
+
+/**
+  @Summary
+    Default handler for the traps
+
+  @Description
+    This routine will be called whenever a trap happens. It stores the trap
+    error code and waits forever.
+    This routine has a weak attribute and can be over written.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    None.
+
 */
+void __attribute__((naked, noreturn, weak)) TRAPS_halt_on_error(uint16_t code);
+
+#endif

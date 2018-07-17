@@ -1,16 +1,16 @@
 /**
-  Generated Main Source File
+  @Generated PIC24 / dsPIC33 / PIC32MM MCUs Header File
 
-  Company:
+  @Company:
     Microchip Technology Inc.
 
-  File Name:
-    main.c
+  @File Name:
+    mcc.h
 
-  Summary:
-    This is the main file generated using PIC24 / dsPIC33 / PIC32MM MCUs
+  @Summary:
+    This is the mcc.h file generated using PIC24 / dsPIC33 / PIC32MM MCUs
 
-  Description:
+  @Description:
     This header file provides implementations for driver APIs for all modules selected in the GUI.
     Generation Information :
         Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - pic24-dspic-pic32mm : 1.55
@@ -42,24 +42,46 @@
     TERMS.
 */
 
-#include "mcc_generated_files/mcc.h"
+#ifndef MCC_H
+#define	MCC_H
+#include <xc.h>
+#include "pin_manager.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include "uart1.h"
+#include "interrupt_manager.h"
+#include "traps.h"
 
-/*
-                         Main application
+#define _XTAL_FREQ  16000000UL
+
+/**
+ * @Param
+    none
+ * @Returns
+    none
+ * @Description
+    Initializes the device to the default states configured in the
+ *                  MCC GUI
+ * @Example
+    SYSTEM_Initialize(void);
  */
-int main(void)
-{
-    // initialize the device
-    SYSTEM_Initialize();
-    UART1_Initialize();
+void SYSTEM_Initialize(void);
 
-    while (1)
-    {
-        printf("lol\n");
-    }
+/**
+ * @Param
+    none
+ * @Returns
+    none
+ * @Description
+    Initializes the oscillator to the default states configured in the
+ *                  MCC GUI
+ * @Example
+    OSCILLATOR_Initialize(void);
+ */
+void OSCILLATOR_Initialize(void);
 
-    return -1;
-}
+
+#endif	/* MCC_H */
 /**
  End of File
 */

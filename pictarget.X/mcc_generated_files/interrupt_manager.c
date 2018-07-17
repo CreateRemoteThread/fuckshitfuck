@@ -1,25 +1,25 @@
 /**
-  Generated Main Source File
+  System Interrupts Generated Driver File 
 
-  Company:
+  @Company:
     Microchip Technology Inc.
 
-  File Name:
-    main.c
+  @File Name:
+    interrupt_manager.h
 
-  Summary:
-    This is the main file generated using PIC24 / dsPIC33 / PIC32MM MCUs
+  @Summary:
+    This is the generated driver implementation file for setting up the
+    interrupts using PIC24 / dsPIC33 / PIC32MM MCUs
 
-  Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
-    Generation Information :
+  @Description:
+    This source file provides implementations for PIC24 / dsPIC33 / PIC32MM MCUs interrupts.
+    Generation Information : 
         Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - pic24-dspic-pic32mm : 1.55
         Device            :  PIC24FJ64GB002
     The generated drivers are tested against the following:
         Compiler          :  XC16 v1.34
         MPLAB             :  MPLAB X v4.15
 */
-
 /*
     (c) 2016 Microchip Technology Inc. and its subsidiaries. You may use this
     software and any derivatives exclusively with Microchip products.
@@ -42,24 +42,15 @@
     TERMS.
 */
 
-#include "mcc_generated_files/mcc.h"
-
-/*
-                         Main application
- */
-int main(void)
-{
-    // initialize the device
-    SYSTEM_Initialize();
-    UART1_Initialize();
-
-    while (1)
-    {
-        printf("lol\n");
-    }
-
-    return -1;
-}
 /**
- End of File
+    Section: Includes
 */
+#include <xc.h>
+
+/**
+    void INTERRUPT_Initialize (void)
+*/
+void INTERRUPT_Initialize (void)
+{
+
+}
