@@ -7,32 +7,41 @@
 
 char c_in[128];
 
+void fghettos(int charsize)
+{
+    int i = 0;
+    while(i < charsize)
+    {
+        char c = UART1_Read();
+        if(c == '\0')
+        {
+            continue;
+        }
+        printf("Got char %02x\r\n",c);
+        if(c == '\r' || c == '\n')
+        {
+            continue;
+        }
+        else
+        {
+            c_in[i++] = c;
+        }
+    }
+    c_in[i++] = '\0';
+    return;
+}
+
 int main(void)
 {
-    // initialize the device
     SYSTEM_Initialize();
-    // UART1_Initialize();
+    UART1_Initialize();
     
-    printf("hello \r\n");
-
-    int i = 0;
+    printf("test\r\n");
     
     while (1)
-    {
-        read(1,&c_in,120);
-        for(;i < 128;i++)
-        {
-            if(c_in[i] == '\r' || c_in[i] == '\n')
-            {
-                c_in[i] = '\0';
-                break;
-            }
-        }
-        // c_in[0] = UART1_Read();
+    {    
+        fghettos(10);
         printf("hello [%s]\r\n",c_in);
-
-        __delay_ms(500);
-        // Add your application code
     }
 
     return -1;

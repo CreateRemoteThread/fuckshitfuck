@@ -103,3 +103,4 @@ venv.bak/
 # mypy
 .mypy_cache/
 /pictarget.X/nbproject/private/
+/pictarget-3.X/nbproject/private/
