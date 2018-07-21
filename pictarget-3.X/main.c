@@ -122,7 +122,7 @@ int main(void)
             AES_init_ctx(&ctx, key);
             PORTB |= (1 << 10);
             AES_ECB_encrypt(&ctx, in);
-            PORTB &= (1 << 10);
+            PORTB &= ~(1 << 10);
             UART1_Write('e');
 			for(i = 0;i < 16;i++)
 			{
