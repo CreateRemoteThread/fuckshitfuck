@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# basic plot and pass tool
+
 import sys
 import binascii
 from scipy.signal import butter,lfilter,freqz
@@ -22,9 +24,9 @@ if __name__ == "__main__":
     print "usage: ./plot-test.py [trace]"
     sys.exit(0)
   f = open(sys.argv[1])
-  dx = f.readlines()[0:50000]
+  dx = f.readlines()
   d = [float32(x.rstrip().split(",")[0]) for x in dx]
-  plaintext = binascii.unhexlify(sys.argv[1][-36:-4])
   plt.plot(d)
-  plt.ylabel("lol")
+  plt.ylabel("Power")
+  plt.xlabel("Sample Count")
   plt.show()

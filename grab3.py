@@ -7,6 +7,9 @@ import os
 import sys
 import serial
 
+NUM_SAMPLES = 50000
+NUM_CAPTURES = 1000
+
 def encryptAndTrace(ps,in_string,fname):
   # print "ENCRYPT: %s" % in_string.rstrip()
   ps.setSimpleTrigger('B',1.0,'Rising',timeout_ms=100,enabled=True)
@@ -28,7 +31,7 @@ if __name__ == "__main__":
   # higher voltage offset for channel A to trace all the things...
   ps.setChannel('A','DC',VRange=0.1,VOffset=0.0,enabled=True,BWLimited=False)
   ps.setChannel('B','DC',VRange=7.0,VOffset=0.0,enabled=True,BWLimited=False)
-  nSamples = 100000
+  nSamples = NUM_SAMPLES
   ps.setSamplingFrequency(40E6,nSamples)
   ser = serial.Serial('/dev/ttyUSB0',9600)
   if sys.argv[1] == "s":
@@ -38,10 +41,11 @@ if __name__ == "__main__":
     output_string = "e" + binascii.hexlify(os.urandom(16)) + "\n"
     encryptAndTrace(ps,output_string,sys.argv[2])
   elif sys.argv[1] == "x":
-    for i in range(0,200):
+    for i in range(0,NUM_CAPTURES):
       in_rand = binascii.hexlify(os.urandom(16))
       output_string = "e" + in_rand + "\n"
       fn = "%s/%s.csv" % (sys.argv[2],in_rand)
+      time.sleep(0.1)
       encryptAndTrace(ps,output_string,fn)
   ser.close()
   ps.stop()
