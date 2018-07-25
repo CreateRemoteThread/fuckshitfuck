@@ -7,8 +7,9 @@ import os
 import sys
 import serial
 
+SAMPLE_RATE = 20E6
 NUM_SAMPLES = 50000
-NUM_CAPTURES = 1000
+NUM_CAPTURES = 400
 
 def encryptAndTrace(ps,in_string,fname):
   # print "ENCRYPT: %s" % in_string.rstrip()
@@ -32,7 +33,7 @@ if __name__ == "__main__":
   ps.setChannel('A','DC',VRange=0.1,VOffset=0.0,enabled=True,BWLimited=False)
   ps.setChannel('B','DC',VRange=7.0,VOffset=0.0,enabled=True,BWLimited=False)
   nSamples = NUM_SAMPLES
-  ps.setSamplingFrequency(40E6,nSamples)
+  ps.setSamplingFrequency(SAMPLE_RATE,nSamples)
   ser = serial.Serial('/dev/ttyUSB0',9600)
   if sys.argv[1] == "s":
     output_string = "e112233445566778899aabbccddeeff00\n"

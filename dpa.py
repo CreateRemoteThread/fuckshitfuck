@@ -85,7 +85,7 @@ if __name__ == "__main__":
   fl = 0.0
   for fn in fns[0:10]:
     fl += getUsefulTraceLength(fn)
-  usefulTraceLength = int(fl/10.0) / 10
+  usefulTraceLength = 10000
   print "Stage 1: Estimating round 1 to be %d samples" % (usefulTraceLength)
   print "Stage 2: Loading %d samples from %d traces" % (usefulTraceLength,len(fns))
   data,plaintexts = loadTraces(usefulTraceLength,fns)
