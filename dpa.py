@@ -20,75 +20,41 @@ def getUsefulTraceLength(fn):
   f.close()
   return c
 
-def loadTraces(length,fns):
-  data = []
-  plaintexts = []
-  for fn in fns:
-    plaintext = fn[-36:-4]
-    # print "Loaded: %s" % plaintext
+def loadTraces(fns):
+  data = zeros((TRACE_LENGTH,len(fns)),float32)
+  plaintexts = zeros((16,len(fns)),uint8)
+  for fn_c in range(0,len(fns)):
+    fn = fns[fn_c]
+    plaintext = binascii.unhexlify(fn[-36:-4])
     f = open(fn,"r")
-    dx = f.readlines()[0:length]
+    dx = f.readlines()[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
     d = [np.float32(x.rstrip().split(",")[0]) for x in dx]
-    # print d
     f.close()
-    data += [d]
-    plaintexts += [plaintext]
-  print "Loaded %d data, %d plaintexts" % (len(data),len(plaintexts))
+    data[:,fn_c] = d
+    # data[:,fn_c] = butter_lowpass_filter(d,10000,40e6,3)
+    plaintexts[:,fn_c] = [uint8(ord(i)) for i in plaintext]
+  print "Loaded %d trace pairs" % len(fns)
+  print "Plaintext size: %d" % plaintexts[:,0].size
+  print "Trace size: %d" % data[:,0].size
+  # print "Loaded %d data, %d plaintexts" % (data[:,0].size,plaintexts[:,0].size)
   return (data,plaintexts)
 
-def deriveKey(data,plaintexts,usefulTraceLength):
-  recovKey = ""
-  if len(data) != len(plaintexts):
-    print "Critical: data length %d != plaintexts length %d. Fix your data" % (len(data), len(plaintexts))
-    sys.exit(0)
-  for i in range(0,16):
-    varray = zeros((len(data),256,16),uint8)
-    groupFin = zeros((256,usefulTraceLength),float32)
-    for n in range(0,256):  
-      for x in range(0,len(plaintexts)):
-        pt = binascii.unhexlify(plaintexts[x])
-        temp = ord(pt[i]) ^ n
-        varray[x,n,i] = sbox[temp]
-      group1 = zeros(usefulTraceLength,float32)
-      group2 = zeros(usefulTraceLength,float32)
-      numG1 = 0
-      numG2 = 0
-      for x in range(0,len(data)):
-        trace = data[x]
-        hypothesis_byte = varray[x,n,i]
-        # print hypothesis_byte
-        if hypothesis_byte % 2 == 0:
-          group1[:] = group1[:] + trace[:]
-          numG1 += 1
-        else:
-          group2[:] = group2[:] + trace[:]
-          numG2 += 1
-      print "Byte %d, Key Hypothesis %d, balance %d:%d" % (i,n,numG1,numG2)
-      # sys.exit(0)
-      group1[:] = group1[:] / numG1
-      group2[:] = group2[:] / numG2
-      groupFin[n,:] = abs(group1[:] - group2[:])
-    print "Analyzing byte %d" % i
-    maxN = 0
-    maxV = max(groupFin[0,:])
-    for n in range(1,256):
-      if max(groupFin[n,:]) > maxV:
-        maxV = max(groupFin[n,:])
-        maxN = n
-    print "Recovered key candidate: %02x" % maxN
-    recovKey += "%02x " % maxN
-  return recovKey
+TRACE_LENGTH = 2400
+
+def deriveKey(data,plaintexts):
+  for BYTE_POSN in range(0,16):
+    hypothesis = zeros(
+    group1 = zeros(TRACE_LENGTH)
+    group2 = zeros(TRACE_LENGTH)
+    for TRACE_NUM in range(0,data[0,:].size):
+      for KEY_GUESS in range(0,256):
+        hypothesis = sbox[plaintexts[BYTE_POSN,TRACE_NUM] ^ KEY_GUESS]
+        
 
 if __name__ == "__main__":
   fns = glob.glob("%s/*.csv" % sys.argv[1])
-  print "Stage 1: Estimating useful trace size"
-  fl = 0.0
-  for fn in fns[0:10]:
-    fl += getUsefulTraceLength(fn)
-  usefulTraceLength = 10000
-  print "Stage 1: Estimating round 1 to be %d samples" % (usefulTraceLength)
-  print "Stage 2: Loading %d samples from %d traces" % (usefulTraceLength,len(fns))
-  data,plaintexts = loadTraces(usefulTraceLength,fns)
+  print "Stage 2: Loading %d samples from %d traces" % (TRACE_LENGTH,len(fns))
+  data,plaintexts = loadTraces(TRACE_LENGTH,fns)
   print "Stage 3: Deriving key... wish me luck!"
-  r = deriveKey(data,plaintexts,usefulTraceLength)
+  r = deriveKey(data,plaintexts,TRACE_LENGTH)
   print "Done: Recovered key %s" % r
