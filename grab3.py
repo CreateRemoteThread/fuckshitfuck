@@ -7,9 +7,9 @@ import os
 import sys
 import serial
 
-SAMPLE_RATE = 20E6
-NUM_SAMPLES = 50000
-NUM_CAPTURES = 400
+SAMPLE_RATE = 40E6
+NUM_SAMPLES = 5000
+NUM_CAPTURES = 10000
 
 def encryptAndTrace(ps,in_string,fname):
   # print "ENCRYPT: %s" % in_string.rstrip()
