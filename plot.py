@@ -44,9 +44,11 @@ if __name__ == "__main__":
     else:
       print "Unknown argument: %s" % opt
       sys.exit(0)
-  f = open(fn)
-  dx = f.readlines()
-  d = [float32(x.rstrip().split(",")[0]) for x in dx[OFFSET:OFFSET + COUNT]]
+  dx = load(fn)
+  d = dx['traces'][0]
+  # f = open(fn)
+  # dx = f.readlines()
+  # d = [float32(x.rstrip().split(",")[0]) for x in dx[OFFSET:OFFSET + COUNT]]
   plt.plot(d)
   plt.title("Single Trace Plot")
   plt.ylabel("Power")
