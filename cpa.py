@@ -35,7 +35,6 @@ def getUsefulTraceLength(fn):
   f.close()
   return c
 
-
 def loadTraces(fns):
   data = zeros((TRACE_LENGTH,len(fns)),float32)
   plaintexts = zeros((16,len(fns)),uint8)
