@@ -10,8 +10,8 @@ import serial
 import numpy as np
 
 SAMPLE_RATE = 20E6
-NUM_SAMPLES = 60000
-NUM_CAPTURES = 2000
+NUM_SAMPLES = 10000
+NUM_CAPTURES = 10000
 
 # file format compatible with github.com/ikizhvatov/pysca
 
