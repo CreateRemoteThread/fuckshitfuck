@@ -98,7 +98,7 @@ int main(void)
     TRISB &= ~((1 << 7) | (1 << 10));
     PORTB &= ~((1 << 10));
     
-    int do_trigger = 0;
+    int do_trigger = 1;
     char buf[128];
     
     struct AES_ctx ctx;
