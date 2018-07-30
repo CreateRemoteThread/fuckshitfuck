@@ -65,7 +65,7 @@
 #pragma config IOL1WAY = ON    // IOLOCK One-Way Set Enable->Once set, the IOLOCK bit cannot be cleared
 #pragma config OSCIOFNC = ON    // OSCO Pin Configuration->OSCO pin functions as port I/O (RA3)
 #pragma config FCKSM = CSECME    // Clock Switching and Fail-Safe Clock Monitor->Sw Enabled, Mon Enabled
-#pragma config FNOSC = FRC    // Initial Oscillator Select->FRC
+#pragma config FNOSC = FRCDIV    // Initial Oscillator Select->Fast RC Oscillator with Postscaler (FRCDIV)
 #pragma config PLL96MHZ = ON    // 96MHz PLL Startup Select->96 MHz PLL Startup is enabled automatically on start-up
 #pragma config PLLDIV = DIV2    // USB 96 MHz PLL Prescaler Select->Oscillator input divided by 2 (8 MHz input)
 #pragma config IESO = ON    // Internal External Switchover->IESO mode (Two-Speed Start-up) enabled
@@ -85,8 +85,8 @@
 void SYSTEM_Initialize(void)
 {
     PIN_MANAGER_Initialize();
-    INTERRUPT_Initialize();
     OSCILLATOR_Initialize();
+    INTERRUPT_Initialize();
     UART1_Initialize();
 }
 
@@ -98,11 +98,9 @@ void OSCILLATOR_Initialize(void)
     OSCTUN = 0x0000;
     // ROEN disabled; ROSEL disabled; RODIV Base clock value; ROSSLP disabled; 
     REFOCON = 0x0000;
-    // CF no clock failure; NOSC FRCPLL; SOSCEN disabled; POSCEN disabled; CLKLOCK unlocked; OSWEN Switch is Complete; IOLOCK not-active; 
-    __builtin_write_OSCCONH((uint8_t) ((0x0100 >> _OSCCON_NOSC_POSITION) & 0x00FF));
-    __builtin_write_OSCCONL((uint8_t) ((0x0100 | _OSCCON_OSWEN_MASK) & 0xFF));
-    // Wait for Clock switch to occur
-    while (OSCCONbits.OSWEN != 0);
+    // CF no clock failure; NOSC FRCDIV; SOSCEN disabled; POSCEN disabled; CLKLOCK unlocked; OSWEN Switch is Complete; IOLOCK not-active; 
+    __builtin_write_OSCCONH((uint8_t) ((0x0700 >> _OSCCON_NOSC_POSITION) & 0x00FF));
+    __builtin_write_OSCCONL((uint8_t) (0x0700 & 0x00FF));
 }
 
 /**

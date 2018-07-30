@@ -40,6 +40,8 @@
       <itemPath>Makefile</itemPath>
       <itemPath>MyConfig.mc3</itemPath>
     </logicalFolder>
+    <itemPath>rsa.c</itemPath>
+    <itemPath>rsa.h</itemPath>
   </logicalFolder>
   <sourceRootList>
     <Elem>.</Elem>

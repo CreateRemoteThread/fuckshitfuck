@@ -10,6 +10,12 @@
 #define ECB 1
 
 #include "aes.h"
+#include "rsa.h"
+
+DIGIT_T m[MAXDIGITS],out[MAXDIGITS],x,y;
+
+const DIGIT_T     Mod[MAXDIGITS] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6};
+const DIGIT_T PrivExp[MAXDIGITS] = { 0x19, 0xE2, 0x0C, 0x83, 0x78, 0x50, 0x9B, 0x31};
 
 uint8_t key[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
 uint8_t in[]  = { 0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a };
@@ -74,15 +80,17 @@ int getByteValue(char c)
 
 void fetchBytes(char *buf,uint8_t *output)
 {
-    PORTB |= (1 << 7);
+
     int i = 0;
     for(;i < 16;i++)
     {
         output[i] = getByteValue(buf[i * 2]) * 0x10 + getByteValue(buf[i * 2 + 1]);
     }
-    PORTB &= ~(1 << 7);
+
     return;
 }
+
+#define DO_RSA 1
 
 int main(void)
 {
@@ -90,13 +98,22 @@ int main(void)
     TRISB &= ~((1 << 7) | (1 << 10));
     PORTB &= ~((1 << 10));
     
+    int do_trigger = 0;
     char buf[128];
-    
-    ghetto_puts("hello\r\n");
     
     struct AES_ctx ctx;
     
     int i = 0;
+
+    ghetto_puts("hello\r\n");
+    for(i = 0;i < 3;i++)
+    {
+        PORTB |= (1 << 7);
+        __delay_ms(100);
+        PORTB &= ~(1 << 7);
+        __delay_ms(50);
+    }
+        
     
     while (1)
     {
@@ -109,27 +126,67 @@ int main(void)
         {
             fetchBytes(buf + 1,key);
             UART1_Write('k');
-			for(i = 0;i < 16;i++)
-			{
-				sprintf(buf,"%02x",key[i]);
+            for(i = 0;i < 16;i++)
+            {
+                sprintf(buf,"%02x",key[i]);
                 ghetto_puts(buf);
-			}
-			ghetto_puts("\r\n");
+            }
+            ghetto_puts("\r\n");
         }
         else if(buf[0] == 'e')
         {
             fetchBytes(buf + 1,in);
             AES_init_ctx(&ctx, key);
-            PORTB |= (1 << 10);
-            AES_ECB_encrypt(&ctx, in);
-            PORTB &= ~(1 << 10);
+            if(do_trigger == 1)
+            {
+                PORTB |= (1 << 10);
+                AES_ECB_encrypt(&ctx, in);
+                PORTB &= ~(1 << 10);
+            }
+            else
+            {
+                AES_ECB_encrypt(&ctx, in);
+            }
             UART1_Write('e');
-			for(i = 0;i < 16;i++)
-			{
-				sprintf(buf,"%02x",in[i]);
+            for(i = 0;i < 16;i++)
+            {
+                sprintf(buf,"%02x",in[i]);
                 ghetto_puts(buf);
-			}
-			ghetto_puts("\r\n");
+            }
+            ghetto_puts("\r\n");
+        }
+        else if(buf[0] == 'r')
+        {
+            fetchBytes(buf + 1,m);
+            if(do_trigger == 1)
+            {
+                PORTB |= (1 << 10);
+                mpModExp(out,m,PrivExp,Mod,MAXDIGITS);
+                PORTB &= ~(1 << 10);
+            }
+            else
+            {
+                mpModExp(out,m,PrivExp,Mod,MAXDIGITS);
+            }
+            UART1_Write('e');
+            for(i = 0;i < MAXDIGITS;i++)
+            {
+                sprintf(buf,"%02x",out[i]);
+                ghetto_puts(buf);
+            }
+            ghetto_puts("\r\n");
+        }
+        else if(buf[0] == 't')
+        {
+            do_trigger = 1 - do_trigger;
+            if(do_trigger == 1)
+            {
+                ghetto_puts("triggers on\r\n");
+            }
+            else
+            {
+                ghetto_puts("triggers off\r\n");
+            }
         }
         else
         {
