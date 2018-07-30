@@ -10,6 +10,8 @@ from numpy import *
 import getopt
 import matplotlib.pyplot as plt
 
+TRIGGERS = 0
+
 def butter_lowpass(cutoff, fs, order=5):
   nyq = 0.5 * fs
   normal_cutoff = cutoff / nyq
@@ -26,8 +28,10 @@ COUNT = 0
 RULER = []
 NUM_TRACES = 1
 
+ADDITIONAL_FILES = []
+
 if __name__ == "__main__":
-  opts, remainder = getopt.getopt(sys.argv[1:],"l:s:o:c:r:",["--lowpass","samples=","offset=","count=","ruler="])
+  opts, remainder = getopt.getopt(sys.argv[1:],"ls:o:c:r:a:",["lowpass","samples=","offset=","count=","ruler=","also="])
   if(len(remainder) == 0):
     print "usage: ./plot.py [args] [file]"
     sys.exit(0)
@@ -43,6 +47,8 @@ if __name__ == "__main__":
       COUNT = int(float(arg))
     elif opt in ("-s","--samples"):
       NUM_TRACES = int(arg)
+    elif opt in ("-a","--also"):
+      ADDITIONAL_FILES.append(arg)
     elif opt in ("-r","--ruler"):
       RULER.append(int(float(arg)))
     else:
@@ -54,6 +60,13 @@ if __name__ == "__main__":
       d = dx['traces'][i]
     else:
       d = dx['traces'][i][OFFSET:OFFSET + COUNT]
+    plt.plot(d)
+  for f in ADDITIONAL_FILES:
+    df = load(f)
+    if OFFSET == 0 and COUNT == 0:
+      d = df['traces'][0]
+    else:
+      d = df['traces'][0][OFFSET:OFFSET + COUNT]
     plt.plot(d)
   plt.title("Single Trace Plot")
   plt.ylabel("Power")

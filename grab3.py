@@ -28,6 +28,11 @@ def encryptAndTrace_2CH(ps,in_string,cnt):
     if dataB[i] > 1.0:
       countUseful += 1
   print "%d : %s:%s (approximately %d useful)" % (cnt,in_string.rstrip(),decrypt_text,countUseful)
+  if decrypt_text[0] != 'e':
+    print "device restarted, waitng for stability"
+    time.sleep(3.0)
+    ser.write("t\r\n")
+    time.sleep(1.0)
   return dataA
 
 def encryptAndTrace(ps,in_string,cnt):
