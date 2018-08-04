@@ -1,5 +1,6 @@
 
 #include "rsa.h"
+#include "mcc_generated_files/mcc.h"
 
 
 /******************** SHORT COPYRIGHT NOTICE**************************
@@ -787,6 +788,7 @@ int mpModExp(DIGIT_T yout[], const DIGIT_T x[],
 	/* For bit j = k-2 downto 0 */
 	while (n)
 	{
+        // PORTB ^= (1 << 10);
 		/* Square y = y * y mod n */
 		modSquareTemp(y, y, tm, ndigits, t1, t2, t3);
 		if (e[n-1] & mask)

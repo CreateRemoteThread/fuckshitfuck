@@ -60,7 +60,7 @@ if __name__ == "__main__":
       d = dx['traces'][i]
     else:
       d = dx['traces'][i][OFFSET:OFFSET + COUNT]
-    plt.plot(d)
+    plt.plot([dpt * 10.0 for dpt in d])
   for f in ADDITIONAL_FILES:
     df = load(f)
     if OFFSET == 0 and COUNT == 0:
