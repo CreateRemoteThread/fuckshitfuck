@@ -10,12 +10,12 @@ import serial
 import numpy as np
 
 SAMPLE_RATE = 20E6
-NUM_SAMPLES = 10000000
+NUM_SAMPLES = 3200000
 NUM_CAPTURES = 1
 
 if __name__ == "__main__":
   ps = ps2000a.PS2000a()
-  ps.setChannel('A','DC',VRange=0.5,VOffset=0.0,enabled=True,BWLimited=False)
+  ps.setChannel('A','DC',VRange=0.1,VOffset=-0.175,enabled=True,BWLimited=False)
   ps.setChannel('B','DC',VRange=5.0,VOffset=0.0,enabled=True,BWLimited=False)
   nSamples = NUM_SAMPLES
   ps.setSamplingFrequency(SAMPLE_RATE,nSamples)

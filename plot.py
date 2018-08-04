@@ -27,7 +27,7 @@ OFFSET = 0
 COUNT = 0
 RULER = []
 NUM_TRACES = 1
-
+GAIN_FACTOR =  31622.0
 ADDITIONAL_FILES = []
 
 if __name__ == "__main__":
@@ -60,7 +60,7 @@ if __name__ == "__main__":
       d = dx['traces'][i]
     else:
       d = dx['traces'][i][OFFSET:OFFSET + COUNT]
-    plt.plot([dpt * 10.0 for dpt in d])
+    plt.plot(d)
   for f in ADDITIONAL_FILES:
     df = load(f)
     if OFFSET == 0 and COUNT == 0:

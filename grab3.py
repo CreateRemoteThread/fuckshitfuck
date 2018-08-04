@@ -10,9 +10,15 @@ import serial
 import numpy as np
 
 SAMPLE_RATE = 20E6
-NUM_SAMPLES = 300000
+NUM_SAMPLES = 250000
 NUM_CAPTURES = 5000
-ANALOG_OFFSET = -0.175
+ANALOG_OFFSET = 0 # -0.175
+
+def fix_out(in_str):
+  try:
+    return [ord(p) for p in binascii.unhexlify(in_str.rstrip()[1:])]
+  except:
+    return [0.0 for x in range(0,16)]
 
 def encryptAndTrace_2CH(ps,in_string,cnt):
   global ser
@@ -25,7 +31,7 @@ def encryptAndTrace_2CH(ps,in_string,cnt):
   dataB = ps.getDataV('B',nSamples,returnOverflow=False)
   countUseful = 0
   for i in range(0,nSamples):
-    if dataB[i] > 1.0:
+    if dataB[i] > 3.0:
       countUseful += 1
   print "%d : %s:%s (approximately %d useful)" % (cnt,in_string.rstrip(),decrypt_text,countUseful)
   if decrypt_text[0] != 'e':
@@ -33,7 +39,7 @@ def encryptAndTrace_2CH(ps,in_string,cnt):
     ser.close()
     time.sleep(10.0)
     ser = serial.Serial('/dev/ttyUSB0',9600)
-  return dataA
+  return (dataA,fix_out(decrypt_text))
 
 def encryptAndTrace(ps,in_string,cnt):
   global ser
@@ -49,7 +55,7 @@ def encryptAndTrace(ps,in_string,cnt):
     ser.close()
     time.sleep(10.0)
     ser = serial.Serial('/dev/ttyUSB0',9600)
-  return dataA
+  return (dataA,fix_out(decrypt_text))
   # f = open(fname,"w")
   # for i in range(0,nSamples):
   #   f.write("%s,%s\n" % (dataA[i],dataB[i]))
@@ -67,31 +73,34 @@ if __name__ == "__main__":
   if sys.argv[1] == "s":
     traces = np.zeros((1,NUM_SAMPLES),np.float32)
     data = np.zeros((1,16),np.uint8)
+    data_out = np.zeros((1,16),np.uint8)
     output_string = "e112233445566778899aabbccddeeff00\n"
-    traces[0,:] = encryptAndTrace_2CH(ps,output_string,0)
+    traces[0,:],data_out[0,:] = encryptAndTrace_2CH(ps,output_string,0)
     data[0,:] = [0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xaa,0xbb,0xcc,0xdd,0xee,0xff,0x00]
-    np.savez(sys.argv[2],traces=traces,data=data)
+    np.savez(sys.argv[2],traces=traces,data=data,data_out=data_out)
   elif sys.argv[1] == "r":
     traces = np.zeros((1,NUM_SAMPLES),np.float32)
     data = np.zeros((1,16),np.uint8)
+    data_out = np.zeros((1,16),np.uint8)
     rand_input = os.urandom(16)
     output_string = "e" + binascii.hexlify(rand_input) + "\n"
     # encryptAndTrace(ps,output_string)
-    traces[0,:] = encryptAndTrace_2CH(ps,output_string,0)
+    traces[0,:],data_out[0,:] = encryptAndTrace_2CH(ps,output_string,0)
     data[0,:] = [ord(x) for x in rand_input]
     # data[0,:] = rand_input
-    np.savez(sys.argv[2],traces=traces,data=data)
+    np.savez(sys.argv[2],traces=traces,data=data,data_out=data_out)
   elif sys.argv[1] == "x":
     traces = np.zeros((NUM_CAPTURES,NUM_SAMPLES),np.float32)
     data = np.zeros((NUM_CAPTURES,16),np.uint8)
+    data_out = np.zeros((NUM_CAPTURES,16),np.uint8)
     for i in range(0,NUM_CAPTURES):
       rand_input = os.urandom(16)
       output_string = "e" + binascii.hexlify(rand_input) + "\n"
       time.sleep(0.1)
       # encryptAndTrace(ps,output_string)
-      traces[i,:] = encryptAndTrace(ps,output_string,i)
+      traces[i,:],data_out[i,:] = encryptAndTrace(ps,output_string,i)
       data[i,:] = [ord(x) for x in rand_input]
-    np.savez(sys.argv[2],traces=traces,data=data)
+    np.savez(sys.argv[2],traces=traces,data=data,data_out=data_out)
   ser.close()
   ps.stop()
   ps.close()
