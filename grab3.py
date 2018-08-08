@@ -13,6 +13,7 @@ SAMPLE_RATE = 20E6
 NUM_SAMPLES = 250000
 NUM_CAPTURES = 5000
 ANALOG_OFFSET = 0 # -0.175
+WRITE_FILE = None
 
 def fix_out(in_str):
   try:
@@ -63,16 +64,26 @@ def encryptAndTrace(ps,in_string,cnt):
   # return decrypt_text
 
 if __name__ == "__main__":
-  optlist, args = getopt.getopt(sys.argv[1:],"s:n:c:o:",["sample_rate=","num_samples=","count=","offset="])
+  optlist, args = getopt.getopt(sys.argv[1:],"s:n:c:o:w:",["sample_rate=","num_samples=","count=","offset=","write_file="])
   for arg,value in optlist:
     if arg in ("-s","--sample_rate"):
-      SAMPLE_RATE = int(value)
+      SAMPLE_RATE = int(float(value))
     elif arg in ("-n","--num_samples"):
       NUM_SAMPLES = int(value);
     elif arg in ("-c","--count"):
       NUM_CAPTURES = int(value);
-    elif arg in ("-c","--count"):
-      ANALOG_OFFSET = float(value);
+    elif arg in ("-o","--offset"):
+      ANALOG_OFFSET = float(value)
+    elif arg in ("-w","--write_file"):
+      WRITE_FILE = value
+  if WRITE_FILE is None:
+    print "fatal, you MUST specify an output file via -w"
+    sys.exit(0)
+  print "WRITE_FILE = %s" % WRITE_FILE
+  print "SAMPLE_RATE = %d" % SAMPLE_RATE
+  print "NUM_SAMPLES = %d" % NUM_SAMPLES
+  print "NUM_CAPTURES = %d" % NUM_CAPTURES
+  print "ANALOG_OFFSET = %f" % ANALOG_OFFSET
   ps = ps2000a.PS2000a()
   # use the finest resolution v-offset you cna.
   ps.setChannel('A','DC',VRange=0.02,VOffset=ANALOG_OFFSET,enabled=True,BWLimited=False)
@@ -103,4 +114,4 @@ if __name__ == "__main__":
   ps.stop()
   ps.close()
   print "Closing interfaces and saving, OK to unplug..."
-  np.savez(sys.argv[2],traces=traces,data=data,data_out=data_out)
+  np.savez(WRITE_FILE,traces=traces,data=data,data_out=data_out)
