@@ -54,7 +54,7 @@ if __name__ == "__main__":
     else:
       print "Unknown argument: %s" % opt
       sys.exit(0)
-  dx = load(fn)
+  dx = load(fn,"r")
   for i in range(0,NUM_TRACES):
     if OFFSET == 0 and COUNT == 0:
       d = dx['traces'][i]
@@ -71,4 +71,5 @@ if __name__ == "__main__":
   plt.title("Single Trace Plot")
   plt.ylabel("Power")
   plt.xlabel("Sample Count")
+  plt.grid()
   plt.show()

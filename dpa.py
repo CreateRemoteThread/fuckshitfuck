@@ -25,7 +25,7 @@ def getUsefulTraceLength(fn):
   return c
 
 def loadTraces(fns):
-  dx = np.load(fns)
+  dx = np.load(fns,"r")
   return (dx['traces'],dx['data'])
 
 # def loadTraces(fns):

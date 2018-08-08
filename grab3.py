@@ -63,33 +63,32 @@ def encryptAndTrace(ps,in_string,cnt):
   # return decrypt_text
 
 if __name__ == "__main__":
+  optlist, args = getopt.getopt(sys.argv[1:],"s:n:c:o:",["sample_rate=","num_samples=","count=","offset="])
+  for arg,value in optlist:
+    if arg in ("-s","--sample_rate"):
+      SAMPLE_RATE = int(value)
+    elif arg in ("-n","--num_samples"):
+      NUM_SAMPLES = int(value);
+    elif arg in ("-c","--count"):
+      NUM_CAPTURES = int(value);
+    elif arg in ("-c","--count"):
+      ANALOG_OFFSET = float(value);
   ps = ps2000a.PS2000a()
   # use the finest resolution v-offset you cna.
-  ps.setChannel('A','DC',VRange=0.1,VOffset=ANALOG_OFFSET,enabled=True,BWLimited=False)
+  ps.setChannel('A','DC',VRange=0.02,VOffset=ANALOG_OFFSET,enabled=True,BWLimited=False)
   ps.setChannel('B','DC',VRange=7.0,VOffset=0.0,enabled=True,BWLimited=False)
   nSamples = NUM_SAMPLES
   ps.setSamplingFrequency(SAMPLE_RATE,nSamples)
   ser = serial.Serial('/dev/ttyUSB0',9600)
-  if sys.argv[1] == "s":
+  if NUM_CAPTURES == 1:
     traces = np.zeros((1,NUM_SAMPLES),np.float32)
     data = np.zeros((1,16),np.uint8)
     data_out = np.zeros((1,16),np.uint8)
     output_string = "e112233445566778899aabbccddeeff00\n"
     traces[0,:],data_out[0,:] = encryptAndTrace_2CH(ps,output_string,0)
     data[0,:] = [0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xaa,0xbb,0xcc,0xdd,0xee,0xff,0x00]
-    np.savez(sys.argv[2],traces=traces,data=data,data_out=data_out)
-  elif sys.argv[1] == "r":
-    traces = np.zeros((1,NUM_SAMPLES),np.float32)
-    data = np.zeros((1,16),np.uint8)
-    data_out = np.zeros((1,16),np.uint8)
-    rand_input = os.urandom(16)
-    output_string = "e" + binascii.hexlify(rand_input) + "\n"
-    # encryptAndTrace(ps,output_string)
-    traces[0,:],data_out[0,:] = encryptAndTrace_2CH(ps,output_string,0)
-    data[0,:] = [ord(x) for x in rand_input]
-    # data[0,:] = rand_input
-    np.savez(sys.argv[2],traces=traces,data=data,data_out=data_out)
-  elif sys.argv[1] == "x":
+    # np.savez(sys.argv[2],traces=traces,data=data,data_out=data_out)
+  else:
     traces = np.zeros((NUM_CAPTURES,NUM_SAMPLES),np.float32)
     data = np.zeros((NUM_CAPTURES,16),np.uint8)
     data_out = np.zeros((NUM_CAPTURES,16),np.uint8)
@@ -100,7 +99,8 @@ if __name__ == "__main__":
       # encryptAndTrace(ps,output_string)
       traces[i,:],data_out[i,:] = encryptAndTrace(ps,output_string,i)
       data[i,:] = [ord(x) for x in rand_input]
-    np.savez(sys.argv[2],traces=traces,data=data,data_out=data_out)
   ser.close()
   ps.stop()
   ps.close()
+  print "Closing interfaces and saving, OK to unplug..."
+  np.savez(sys.argv[2],traces=traces,data=data,data_out=data_out)
