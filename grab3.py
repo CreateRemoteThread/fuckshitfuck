@@ -9,11 +9,12 @@ import sys
 import serial
 import numpy as np
 
-SAMPLE_RATE = 20E6
-NUM_SAMPLES = 250000
-NUM_CAPTURES = 5000
+SAMPLE_RATE = 64000000 
+NUM_SAMPLES = 50000
+NUM_CAPTURES = 1000
 ANALOG_OFFSET = 0 # -0.175
 WRITE_FILE = None
+VRANGE_PRIMARY = 0.05 # check tis manually first
 
 def fix_out(in_str):
   try:
@@ -86,10 +87,11 @@ if __name__ == "__main__":
   print "ANALOG_OFFSET = %f" % ANALOG_OFFSET
   ps = ps2000a.PS2000a()
   # use the finest resolution v-offset you cna.
-  ps.setChannel('A','DC',VRange=0.02,VOffset=ANALOG_OFFSET,enabled=True,BWLimited=False)
+  ps.setChannel('A','DC',VRange=VRANGE_PRIMARY,VOffset=ANALOG_OFFSET,enabled=True,BWLimited=False)
   ps.setChannel('B','DC',VRange=7.0,VOffset=0.0,enabled=True,BWLimited=False)
   nSamples = NUM_SAMPLES
-  ps.setSamplingFrequency(SAMPLE_RATE,nSamples)
+  (freq,maxSamples) = ps.setSamplingFrequency(SAMPLE_RATE,nSamples)
+  print "Actual frequency %d Hz" % freq
   ser = serial.Serial('/dev/ttyUSB0',9600)
   if NUM_CAPTURES == 1:
     traces = np.zeros((1,NUM_SAMPLES),np.float32)
