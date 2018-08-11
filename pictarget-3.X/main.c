@@ -106,6 +106,7 @@ int main(void)
     int i = 0;
 
     ghetto_puts("hello\r\n");
+    /*
     for(i = 0;i < 3;i++)
     {
         PORTB |= (1 << 7);
@@ -113,6 +114,7 @@ int main(void)
         PORTB &= ~(1 << 7);
         __delay_ms(50);
     }
+     */
         
     
     while (1)

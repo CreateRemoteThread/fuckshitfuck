@@ -14,7 +14,8 @@ NUM_SAMPLES = 50000
 NUM_CAPTURES = 1000
 ANALOG_OFFSET = 0 # -0.175
 WRITE_FILE = None
-VRANGE_PRIMARY = 0.05 # check tis manually first
+# VRANGE_PRIMARY = 0.05 # for EM probe
+VRANGE_PRIMARY = 0.1
 
 def fix_out(in_str):
   try:
@@ -39,7 +40,7 @@ def encryptAndTrace_2CH(ps,in_string,cnt):
   if decrypt_text[0] != 'e':
     print "device restarted, waitng for stability"
     ser.close()
-    time.sleep(10.0)
+    time.sleep(5.0)
     ser = serial.Serial('/dev/ttyUSB0',9600)
   return (dataA,fix_out(decrypt_text))
 
@@ -64,12 +65,27 @@ def encryptAndTrace(ps,in_string,cnt):
   # f.close()
   # return decrypt_text
 
+def usage():
+  print " grab3.py : part of the fuckshitfuck toolkit"
+  print "----------------------------------------------"
+  print " -h : prints this message"
+  print " -r [samplerate] : set samplerate in hz"
+  print " -n [samplecnt] : get this many samples per trace"
+  print " -c [tracecnt] : get this many traces"
+  print " -o [offset] : set picoscope analog offset"
+  print " -w [outfile] : save traces to this file"
+  print ""
+  print " if -c is 1, extra info will be printed"
+
 if __name__ == "__main__":
-  optlist, args = getopt.getopt(sys.argv[1:],"s:n:c:o:w:",["sample_rate=","num_samples=","count=","offset=","write_file="])
+  optlist, args = getopt.getopt(sys.argv[1:],"hr:n:c:o:w:",["help","samplerate=","samples=","count=","offset=","write_file="])
   for arg,value in optlist:
-    if arg in ("-s","--sample_rate"):
+    if arg in ("-h","--help"):
+      usage()
+      sys.exit(0)
+    elif arg in ("-r","--samplerate"):
       SAMPLE_RATE = int(float(value))
-    elif arg in ("-n","--num_samples"):
+    elif arg in ("-n","--samples"):
       NUM_SAMPLES = int(value);
     elif arg in ("-c","--count"):
       NUM_CAPTURES = int(value);

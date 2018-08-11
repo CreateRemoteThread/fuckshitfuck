@@ -61,8 +61,8 @@ void UART1_Initialize(void)
     U1MODE = (0x8008 & ~(1<<15));  // disabling UARTEN bit   
     // UTXISEL0 TX_ONE_CHAR; UTXINV disabled; OERR NO_ERROR_cleared; URXISEL RX_ONE_CHAR; UTXBRK COMPLETED; UTXEN disabled; ADDEN disabled; 
     U1STA = 0x0000;
-    // BaudRate = 9600; Frequency = 2000000 Hz; BRG 51; 
-    U1BRG = 0x0033;
+    // BaudRate = 9600; Frequency = 8000000 Hz; BRG 207; 
+    U1BRG = 0x00CF;
     
     U1MODEbits.UARTEN = 1;  // enabling UARTEN bit
     U1STAbits.UTXEN = 1; 

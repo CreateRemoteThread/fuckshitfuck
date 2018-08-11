@@ -30,44 +30,44 @@ NUM_TRACES = 1
 GAIN_FACTOR =  31622.0
 ADDITIONAL_FILES = []
 
+def usage():
+  print " plot.py : part of the fuckshitfuck toolkit"
+  print "----------------------------------------------"
+  print " -h : prints this message"
+  print " -o : offset to start plotting samples from"
+  print " -n : number of samples from offset to plot"
+  print " -c : number of traces to plot"
+  print " -f : input npz file (can be multiple)"
+  print " -r : print vertical ruler at point (NOT IMPLEMENTED)"
+  print " -l : do soft low pass filter (NOT IMPLEMENTED)"
+
 if __name__ == "__main__":
-  opts, remainder = getopt.getopt(sys.argv[1:],"ls:o:c:r:a:",["lowpass","samples=","offset=","count=","ruler=","also="])
-  if(len(remainder) == 0):
-    print "usage: ./plot.py [args] [file]"
-    sys.exit(0)
-  elif len(remainder) == 1:
-    fn = remainder[0]
-  else:
-    print "usage: ./plot.py [args] [file]"
-    sys.exit(0)
+  opts, remainder = getopt.getopt(sys.argv[1:],"hln:o:c:r:f:",["help","lowpass","samples=","offset=","count=","ruler=","file="])
   for opt,arg in opts:
-    if opt in ("-o","--offset"):
+    if opt in ("-h","--help"):
+      usage()
+      sys.exit(0)
+    elif opt in ("-o","--offset"):
       OFFSET = int(float(arg))
-    elif opt in ("-c","--count"):
+    elif opt in ("-n","--samples"):
       COUNT = int(float(arg))
-    elif opt in ("-s","--samples"):
+    elif opt in ("-c","--count"):
       NUM_TRACES = int(arg)
-    elif opt in ("-a","--also"):
+    elif opt in ("-f","--file"):
       ADDITIONAL_FILES.append(arg)
     elif opt in ("-r","--ruler"):
       RULER.append(int(float(arg)))
     else:
       print "Unknown argument: %s" % opt
-      sys.exit(0)
-  dx = load(fn,"r")
-  for i in range(0,NUM_TRACES):
-    if OFFSET == 0 and COUNT == 0:
-      d = dx['traces'][i]
-    else:
-      d = dx['traces'][i][OFFSET:OFFSET + COUNT]
-    plt.plot(d)
+      sys.exit(0) 
   for f in ADDITIONAL_FILES:
     df = load(f)
-    if OFFSET == 0 and COUNT == 0:
-      d = df['traces'][0]
-    else:
-      d = df['traces'][0][OFFSET:OFFSET + COUNT]
-    plt.plot(d)
+    for i in range(0,NUM_TRACES):
+      if OFFSET == 0 and COUNT == 0:
+        d = df['traces'][0]
+      else:
+        d = df['traces'][0][OFFSET:OFFSET + COUNT]
+      plt.plot(d)
   plt.title("Single Trace Plot")
   plt.ylabel("Power")
   plt.xlabel("Sample Count")

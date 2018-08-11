@@ -60,12 +60,12 @@
 #pragma config WPEND = WPENDMEM    // Segment Write Protection End Page Select->Write Protect from WPFP to the last page of memory
 
 // CONFIG2
-#pragma config POSCMOD = NONE    // Primary Oscillator Select->Primary Oscillator disabled
+#pragma config POSCMOD = HS    // Primary Oscillator Select->HS Oscillator mode selected
 #pragma config I2C1SEL = PRI    // I2C1 Pin Select bit->Use default SCL1/SDA1 pins for I2C1 
 #pragma config IOL1WAY = ON    // IOLOCK One-Way Set Enable->Once set, the IOLOCK bit cannot be cleared
 #pragma config OSCIOFNC = ON    // OSCO Pin Configuration->OSCO pin functions as port I/O (RA3)
 #pragma config FCKSM = CSECME    // Clock Switching and Fail-Safe Clock Monitor->Sw Enabled, Mon Enabled
-#pragma config FNOSC = FRCDIV    // Initial Oscillator Select->Fast RC Oscillator with Postscaler (FRCDIV)
+#pragma config FNOSC = PRI    // Initial Oscillator Select->Primary Oscillator (XT, HS, EC)
 #pragma config PLL96MHZ = ON    // 96MHz PLL Startup Select->96 MHz PLL Startup is enabled automatically on start-up
 #pragma config PLLDIV = DIV2    // USB 96 MHz PLL Prescaler Select->Oscillator input divided by 2 (8 MHz input)
 #pragma config IESO = ON    // Internal External Switchover->IESO mode (Two-Speed Start-up) enabled
@@ -85,22 +85,22 @@
 void SYSTEM_Initialize(void)
 {
     PIN_MANAGER_Initialize();
-    OSCILLATOR_Initialize();
     INTERRUPT_Initialize();
+    OSCILLATOR_Initialize();
     UART1_Initialize();
 }
 
 void OSCILLATOR_Initialize(void)
 {
-    // CPDIV 1:1; PLLEN disabled; RCDIV FRC/2; DOZE 1:8; DOZEN disabled; ROI disabled; 
-    CLKDIV = 0x3100;
+    // CPDIV 1:1; PLLEN disabled; RCDIV FRC/1; DOZE 1:8; DOZEN disabled; ROI disabled; 
+    CLKDIV = 0x3000;
     // TUN Center frequency; 
     OSCTUN = 0x0000;
     // ROEN disabled; ROSEL disabled; RODIV Base clock value; ROSSLP disabled; 
     REFOCON = 0x0000;
-    // CF no clock failure; NOSC FRCDIV; SOSCEN disabled; POSCEN disabled; CLKLOCK unlocked; OSWEN Switch is Complete; IOLOCK not-active; 
-    __builtin_write_OSCCONH((uint8_t) ((0x0700 >> _OSCCON_NOSC_POSITION) & 0x00FF));
-    __builtin_write_OSCCONL((uint8_t) (0x0700 & 0x00FF));
+    // CF no clock failure; NOSC PRI; SOSCEN disabled; POSCEN disabled; CLKLOCK unlocked; OSWEN Switch is Complete; IOLOCK not-active; 
+    __builtin_write_OSCCONH((uint8_t) ((0x0200 >> _OSCCON_NOSC_POSITION) & 0x00FF));
+    __builtin_write_OSCCONL((uint8_t) (0x0200 & 0x00FF));
 }
 
 /**
