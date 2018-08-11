@@ -43,7 +43,7 @@ XAXIS = "Sample Count"
 YAXIS = "Power"
 
 def configure_fft(arg):
-  global FFT_BASEFREQ,FFT_EN,TITLE
+  global FFT_BASEFREQ,FFT_EN,TITLE,AXIS
   FFT_BASEFREQ = float(arg)
   TITLE = "FFT Plot (%d Hz Sample Rate)" % FFT_BASEFREQ
   XAXIS = "Frequency"

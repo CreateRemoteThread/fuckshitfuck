@@ -72,6 +72,8 @@ def deriveKey(data,plaintexts):
       group2[:] /= numGroup2
       diffProfile = abs(group1[:] - group2[:])
       plfh[KEY_GUESS] = max(diffProfile)
+    sorted_dpa = argsort(plfh)[::-1]
+    print "Selected %02x, %f, %f, %f" % (argmax(plfh),plfh[sorted_dpa[0]],plfh[sorted_dpa[1]],plfh[sorted_dpa[2]])
     plt.plot(range(0,256),plfh)
     recovered[BYTE_POSN] = argmax(plfh)
   return recovered

@@ -72,6 +72,8 @@ def deriveKey(data,plaintexts):
     # print maxcpa[np.argmax(maxcpa)]
     plt.plot(range(0,256),maxcpa)
     bestguess[bnum] = np.argmax(maxcpa)
+    sortedcpa = np.argsort(maxcpa)[::-1]
+    print "Selected: %02x; CPA: %f, %f, %f" % (bestguess[bnum], maxcpa[bestguess[bnum]], maxcpa[sortedcpa[1]],maxcpa[sortedcpa[2]])
   return bestguess
 
 fn = None
