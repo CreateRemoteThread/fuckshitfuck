@@ -4,6 +4,7 @@ import numpy as np
 from scipy.signal import butter, lfilter, freqz
 import matplotlib.pyplot as plt
 from numpy import *
+import getopt
 import sys
 import glob
 import binascii
@@ -73,12 +74,35 @@ def deriveKey(data,plaintexts):
     bestguess[bnum] = np.argmax(maxcpa)
   return bestguess
 
+fn = None
+
+def usage():
+  print " cpa.py : part of the fuckshitfuck toolkit"
+  print "----------------------------------------------"
+  print " -h : prints this message"
+  print " -o : offset to start correlating from"
+  print " -n : number of samples per trace"
+  print " -f : trace file (.npz from grab3.py)"
+
 if __name__ == "__main__":
-  if len(sys.argv) < 2:
-    print "usage: ./cpa.py [traceset1] [traceset2]"
+  opts, remainder = getopt.getopt(sys.argv[1:],"ho:n:f:",["help","offset=","samples=","file="])
+  for opt, arg in opts:
+    if opt in ("-h","--help"):
+      usage()
+      sys.exit(0)
+    elif opt in ("-o","--offset"):
+      TRACE_OFFSET = int(arg)
+    elif opt in ("-n","--samples"):
+      TRACE_LENGTH = int(arg)
+    elif opt in ("-f","--file"):
+      fn = arg
+  print "TRACE_OFFSET = %d" % TRACE_OFFSET
+  print "TRACE_LENGTH = %d" % TRACE_LENGTH
+  if fn is None:
+    print "You must specify a file with -f"
     sys.exit(0)
   print "Stage 1: Loading plaintexts..."
-  data,plaintexts = loadTraces(sys.argv[1])
+  data,plaintexts = loadTraces(fn)
   print "Stage 2: Deriving key... wish me luck!"
   r = deriveKey(data,plaintexts)
   plt.title("AES SubKey Correlation Overview")
