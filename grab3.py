@@ -59,11 +59,6 @@ def encryptAndTrace(ps,in_string,cnt):
     time.sleep(10.0)
     ser = serial.Serial('/dev/ttyUSB0',9600)
   return (dataA,fix_out(decrypt_text))
-  # f = open(fname,"w")
-  # for i in range(0,nSamples):
-  #   f.write("%s,%s\n" % (dataA[i],dataB[i]))
-  # f.close()
-  # return decrypt_text
 
 def usage():
   print " grab3.py : part of the fuckshitfuck toolkit"

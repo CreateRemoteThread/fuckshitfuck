@@ -790,6 +790,7 @@ int mpModExp(DIGIT_T yout[], const DIGIT_T x[],
 	{
         // PORTB ^= (1 << 10);
 		/* Square y = y * y mod n */
+        PORTB ^= (1 << 10);
 		modSquareTemp(y, y, tm, ndigits, t1, t2, t3);
 		if (e[n-1] & mask)
 		{	/*	if e(j) == 1 then multiply
@@ -797,6 +798,7 @@ int mpModExp(DIGIT_T yout[], const DIGIT_T x[],
 			modMultTemp(y, y, x, tm, ndigits, t1, t2, t3);
 		}
 
+        PORTB ^= (1 << 10);
 		/* Move to next bit */
 		mpNEXTBITMASK(mask, n);
 	}
