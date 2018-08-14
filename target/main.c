@@ -12,6 +12,7 @@
 #define ECB 1
 
 #include "aes.h"
+#include "des.h"
 
 #define BAUD 9600 // define baud
 #define BAUDRATE ((F_CPU)/(BAUD*16UL)-1) // set baud rate value for UBRR
@@ -51,7 +52,7 @@ int main(void)
 	uint8_t in[]  = { 0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a };
 	uint8_t aes_out[]  = { 0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a };
 		
-	DDRB |= (1 << PINB1);
+	DDRB |= (1 << PORTB1) | (1 << PORTB0);
 
 	struct AES_ctx ctx;
 	printf("hello\r");
@@ -95,9 +96,35 @@ int main(void)
 			}
 			AES_init_ctx(&ctx, key);
 			memcpy(aes_out,in,16);
+			PORTB |= (1 << PORTB0);
 			AES_ECB_encrypt(&ctx, aes_out);
+			PORTB &= ~(1 << PORTB0);
 			printf("e");
 			for(i = 0;i < 16;i++)
+			{
+				printf("%02x",aes_out[i]);
+			}
+			printf("\r\n");
+		}
+		else if(lol[0] == 'd')
+		{
+			// only 8 byte DES is implemented, but this is fine.
+			char *l = (char *)lol + 1;
+			int i = 0;
+			for(;i < 8;i++)
+			{
+				if(l[0] == '\r' || l[0] == '\n')
+				{
+					break;
+				}
+				sscanf(l,"%02x",&in[i]);
+				l += 2;
+			}
+			PORTB |= (1 << PORTB0);
+			des_enc(aes_out, in, key);
+			PORTB &= ~(1 << PORTB0);
+			printf("e");
+			for(i = 0;i < 8;i++)
 			{
 				printf("%02x",aes_out[i]);
 			}
