@@ -67,8 +67,6 @@ def configure_specgram(arg):
   TITLE = "Spectogram View"
   SPECGRAM_EN = True
   SPECGRAM_SR = float(arg)
-  YAXIS = "Frequency Component"
-  XAXIS = "Time"
 
 def configure_lowpass(in_str):
   global LOWPASS_CUTOFF, LOWPASS_SR, LOWPASS_ORDER, LOWPASS_EN, TITLE
@@ -147,8 +145,16 @@ if __name__ == "__main__":
         plt.plot(frq,abs(Y),'r') 
       elif SPECGRAM_EN:
         fig, (ax1, ax2) = plt.subplots(nrows=2)
+        ax1.set_title("Power Trace")
+        ax1.set_ylabel("Power")
+        ax1.set_xlabel("Sample Count")
         ax1.plot(d)
+        ax2.set_title("Spectogram")
+        ax2.set_ylabel("Frequency Component")
+        ax2.set_xlabel("Time")
         ax2.specgram(d,NFFT=1024,Fs=SPECGRAM_SR,noverlap=900)
+        plt.show()
+        PLOT_SHOWN = True
       elif AVG_EN:
         if COUNT == 0:
           m = zeros(len(df['traces'][0]))
