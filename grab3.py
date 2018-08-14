@@ -134,4 +134,4 @@ if __name__ == "__main__":
   ps.stop()
   ps.close()
   print "Closing interfaces and saving, OK to unplug..."
-  np.savez(WRITE_FILE,traces=traces,data=data,data_out=data_out)
+  np.savez(WRITE_FILE,traces=traces,data=data,data_out=data_out,freq=[freq])
