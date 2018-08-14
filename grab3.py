@@ -12,16 +12,22 @@ import numpy as np
 SAMPLE_RATE = 64000000 
 NUM_SAMPLES = 50000
 NUM_CAPTURES = 1000
-ANALOG_OFFSET = 0 # -0.175
+ANALOG_OFFSET = -0.1
 WRITE_FILE = None
 # VRANGE_PRIMARY = 0.05 # for EM probe
 VRANGE_PRIMARY = 0.1
 
+# RAND_LEN = 16
+# RAND_KEY = "r"
+
+RAND_LEN = 8
+RAND_KEY = "r"
+
 def fix_out(in_str):
   try:
-    return [ord(p) for p in binascii.unhexlify(in_str.rstrip()[1:])]
+    return [ord(p) for p in binascii.unhexlify(in_str.rstrip()[1:])[:RAND_LEN]]
   except:
-    return [0.0 for x in range(0,16)]
+    return [0.0 for x in range(0,RAND_LEN)]
 
 def encryptAndTrace_2CH(ps,in_string,cnt):
   global ser
@@ -53,7 +59,7 @@ def encryptAndTrace(ps,in_string,cnt):
   decrypt_text = ser.readline().rstrip()
   dataA = ps.getDataV('A',nSamples,returnOverflow=False)
   print "%d : %s:%s" % (cnt,in_string.rstrip(),decrypt_text)
-  if decrypt_text[0] != 'e' or len(decrypt_text) != 33:
+  if decrypt_text[0] != 'e' or len(decrypt_text) != (1 + RAND_LEN * 2):
     print "device restarted, waitng for stability"
     ser.close()
     time.sleep(10.0)
@@ -106,19 +112,20 @@ if __name__ == "__main__":
   ser = serial.Serial('/dev/ttyUSB0',9600)
   if NUM_CAPTURES == 1:
     traces = np.zeros((1,NUM_SAMPLES),np.float32)
-    data = np.zeros((1,16),np.uint8)
-    data_out = np.zeros((1,16),np.uint8)
-    output_string = "e112233445566778899aabbccddeeff00\n"
+    data = np.zeros((1,RAND_LEN),np.uint8)
+    data_out = np.zeros((1,RAND_LEN),np.uint8)
+    output_string = RAND_KEY + binascii.hexlify(os.urandom(RAND_LEN)) + "\n"
     traces[0,:],data_out[0,:] = encryptAndTrace_2CH(ps,output_string,0)
-    data[0,:] = [0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xaa,0xbb,0xcc,0xdd,0xee,0xff,0x00]
+    data[0,:] = [0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xaa,0xbb,0xcc,0xdd,0xee,0xff,0x00][0:RAND_LEN]
     # np.savez(sys.argv[2],traces=traces,data=data,data_out=data_out)
   else:
     traces = np.zeros((NUM_CAPTURES,NUM_SAMPLES),np.float32)
-    data = np.zeros((NUM_CAPTURES,16),np.uint8)
-    data_out = np.zeros((NUM_CAPTURES,16),np.uint8)
+    data = np.zeros((NUM_CAPTURES,RAND_LEN),np.uint8)
+    data_out = np.zeros((NUM_CAPTURES,RAND_LEN),np.uint8)
     for i in range(0,NUM_CAPTURES):
-      rand_input = os.urandom(16)
-      output_string = "e" + binascii.hexlify(rand_input) + "\n"
+      # rand_input = os.urandom(RAND_LEN)
+      rand_input = "\xF0\xF0\xF0\xF0\x0F\x0F\x0F\x0F" # [0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,0xF0]
+      output_string = RAND_KEY + binascii.hexlify(rand_input) + "\n"
       time.sleep(0.1)
       # encryptAndTrace(ps,output_string)
       traces[i,:],data_out[i,:] = encryptAndTrace(ps,output_string,i)

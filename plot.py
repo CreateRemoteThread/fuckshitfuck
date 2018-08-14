@@ -38,12 +38,20 @@ LOWPASS_EN = False
 FFT_BASEFREQ = 40000000
 FFT_EN = False
 
-TITLE = "Single Plot Trace"
+TITLE = "Single Trace Plot"
 XAXIS = "Sample Count"
 YAXIS = "Power"
 
+AVG_EN = False
+
+def configure_average():
+  global AVG_EN,TITLE
+  AVG_EN = True
+  TITLE = "Average Trace Plot"
+  
+
 def configure_fft(arg):
-  global FFT_BASEFREQ,FFT_EN,TITLE,AXIS
+  global FFT_BASEFREQ,FFT_EN,TITLE,XAXIS
   FFT_BASEFREQ = float(arg)
   TITLE = "FFT Plot (%d Hz Sample Rate)" % FFT_BASEFREQ
   XAXIS = "Frequency"
@@ -73,13 +81,16 @@ def usage():
   print " -r : print vertical ruler at point (NOT IMPLEMENTED)"
   print " -l [cutoff,freq,order] : lowpass mode - units in hz"
   print " -F [freq] : plot fft, base freq in hz"
+  print " -a : plot average trace"
 
 if __name__ == "__main__":
-  opts, remainder = getopt.getopt(sys.argv[1:],"hl:n:o:c:r:f:F:",["help","lowpass=","samples=","offset=","count=","ruler=","file=","fft="])
+  opts, remainder = getopt.getopt(sys.argv[1:],"ahl:n:o:c:r:f:F:",["average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft="])
   for opt,arg in opts:
     if opt in ("-h","--help"):
       usage()
       sys.exit(0)
+    elif opt in ("-a","--average"):
+      configure_average()
     elif opt in ("-o","--offset"):
       OFFSET = int(float(arg))
     elif opt in ("-n","--samples"):
@@ -97,11 +108,11 @@ if __name__ == "__main__":
     else:
       print "Unknown argument: %s" % opt
       sys.exit(0) 
-  if FFT_EN and LOWPASS_EN:
-    print "Combining an FFT and a Low Pass is unsupported"
+  if [FFT_EN, LOWPASS_EN, AVG_EN].count(True) > 1:
+    print "You can only select one of -F (FFT), -l (LOWPASS) or -a (AVERAGE)"
     sys.exit(0)
   for f in ADDITIONAL_FILES:
-    df = load(f)
+    df = load(f,mmap_mode = 'r')
     for i in range(0,NUM_TRACES):
       if OFFSET == 0 and COUNT == 0:
         d = df['traces'][0]
@@ -118,6 +129,23 @@ if __name__ == "__main__":
         Y = fft.fft(d)/n
         Y = Y[range(n/2)]
         plt.plot(frq,abs(Y),'r') 
+      elif AVG_EN:
+        if COUNT == 0:
+          m = zeros(len(df['traces'][0]))
+          numTraces = 0
+          for trace in df['traces']:
+            m[:] += trace[:]
+            numTraces += 1
+          m[:] /= numTraces
+          plt.plot(m)
+        else:
+          m = zeros(COUNT)
+          numTraces = 0
+          for trace in df['traces']:
+            m[:] += trace[OFFSET:OFFSET + COUNT]
+            numTraces += 1
+          m /= numTraces
+          plt.plot(m)
       else:
         plt.plot(d)
   plt.title(TITLE)
