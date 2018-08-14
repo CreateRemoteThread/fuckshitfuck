@@ -17,11 +17,9 @@ WRITE_FILE = None
 # VRANGE_PRIMARY = 0.05 # for EM probe
 VRANGE_PRIMARY = 0.1
 
-# RAND_LEN = 16
-# RAND_KEY = "r"
-
-RAND_LEN = 8
+RAND_LEN = 16
 RAND_KEY = "r"
+FIXED_PT = False
 
 def fix_out(in_str):
   try:
@@ -75,15 +73,20 @@ def usage():
   print " -c [tracecnt] : get this many traces"
   print " -o [offset] : set picoscope analog offset"
   print " -w [outfile] : save traces to this file"
+  print " -R : RSA mode (static short plaintext)"
   print ""
   print " if -c is 1, extra info will be printed"
 
 if __name__ == "__main__":
-  optlist, args = getopt.getopt(sys.argv[1:],"hr:n:c:o:w:",["help","samplerate=","samples=","count=","offset=","write_file="])
+  optlist, args = getopt.getopt(sys.argv[1:],"Rhr:n:c:o:w:",["RSA","help","samplerate=","samples=","count=","offset=","write_file="])
   for arg,value in optlist:
     if arg in ("-h","--help"):
       usage()
       sys.exit(0)
+    elif arg in ("-R","--RSA"):
+      RAND_LEN = 8
+      RAND_KEY = "r"
+      FIXED_PT = True
     elif arg in ("-r","--samplerate"):
       SAMPLE_RATE = int(float(value))
     elif arg in ("-n","--samples"):
@@ -123,8 +126,10 @@ if __name__ == "__main__":
     data = np.zeros((NUM_CAPTURES,RAND_LEN),np.uint8)
     data_out = np.zeros((NUM_CAPTURES,RAND_LEN),np.uint8)
     for i in range(0,NUM_CAPTURES):
-      # rand_input = os.urandom(RAND_LEN)
-      rand_input = "\xF0\xF0\xF0\xF0\x0F\x0F\x0F\x0F" # [0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,0xF0]
+      if FIXED_PT:
+        rand_input = "\xF0\xF0\xF0\xF0\x0F\x0F\x0F\x0F" # [0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,0xF0]
+      else:
+        rand_input = os.urandom(RAND_LEN)
       output_string = RAND_KEY + binascii.hexlify(rand_input) + "\n"
       time.sleep(0.1)
       # encryptAndTrace(ps,output_string)
