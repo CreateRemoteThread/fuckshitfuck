@@ -38,6 +38,11 @@ LOWPASS_EN = False
 FFT_BASEFREQ = 40000000
 FFT_EN = False
 
+SPECGRAM_EN = False
+SPECGRAM_SR = 0
+
+PLOT_SHOWN = False # dirty hack
+
 TITLE = "Single Trace Plot"
 XAXIS = "Sample Count"
 YAXIS = "Power"
@@ -56,6 +61,14 @@ def configure_fft(arg):
   TITLE = "FFT Plot (%d Hz Sample Rate)" % FFT_BASEFREQ
   XAXIS = "Frequency"
   FFT_EN = True
+
+def configure_specgram(arg):
+  global SPECGRAM_EN, TITLE, XAXIS, YAXIS, SPECGRAM_SR
+  TITLE = "Spectogram View"
+  SPECGRAM_EN = True
+  SPECGRAM_SR = float(arg)
+  YAXIS = "Frequency Component"
+  XAXIS = "Time"
 
 def configure_lowpass(in_str):
   global LOWPASS_CUTOFF, LOWPASS_SR, LOWPASS_ORDER, LOWPASS_EN, TITLE
@@ -79,16 +92,19 @@ def usage():
   print " -c : number of traces to plot"
   print " -f : input npz file (can be multiple)"
   print " -r : print vertical ruler at point (NOT IMPLEMENTED)"
-  print " -l [cutoff,freq,order] : lowpass mode - units in hz"
-  print " -F [freq] : plot fft, base freq in hz"
+  print " -l [cutoff,samplerate,order] : lowpass mode - units in hz"
+  print " -F [samplerate] : plot fft, base freq in hz"
   print " -a : plot average trace"
+  print " -s [samplerate] : plot spectrogram"
 
 if __name__ == "__main__":
-  opts, remainder = getopt.getopt(sys.argv[1:],"ahl:n:o:c:r:f:F:",["average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft="])
+  opts, remainder = getopt.getopt(sys.argv[1:],"s:ahl:n:o:c:r:f:F:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft="])
   for opt,arg in opts:
     if opt in ("-h","--help"):
       usage()
       sys.exit(0)
+    elif opt in ("-s","--spectrogram"):
+      configure_specgram(arg)
     elif opt in ("-a","--average"):
       configure_average()
     elif opt in ("-o","--offset"):
@@ -108,7 +124,7 @@ if __name__ == "__main__":
     else:
       print "Unknown argument: %s" % opt
       sys.exit(0) 
-  if [FFT_EN, LOWPASS_EN, AVG_EN].count(True) > 1:
+  if [FFT_EN, LOWPASS_EN, AVG_EN, SPECGRAM_EN].count(True) > 1:
     print "You can only select one of -F (FFT), -l (LOWPASS) or -a (AVERAGE)"
     sys.exit(0)
   for f in ADDITIONAL_FILES:
@@ -129,6 +145,10 @@ if __name__ == "__main__":
         Y = fft.fft(d)/n
         Y = Y[range(n/2)]
         plt.plot(frq,abs(Y),'r') 
+      elif SPECGRAM_EN:
+        fig, (ax1, ax2) = plt.subplots(nrows=2)
+        ax1.plot(d)
+        ax2.specgram(d,NFFT=1024,Fs=SPECGRAM_SR,noverlap=900)
       elif AVG_EN:
         if COUNT == 0:
           m = zeros(len(df['traces'][0]))
@@ -148,8 +168,9 @@ if __name__ == "__main__":
           plt.plot(m)
       else:
         plt.plot(d)
-  plt.title(TITLE)
-  plt.ylabel(YAXIS)
-  plt.xlabel(XAXIS)
-  plt.grid()
-  plt.show()
+  if PLOT_SHOWN is False:
+    plt.title(TITLE)
+    plt.ylabel(YAXIS)
+    plt.xlabel(XAXIS)
+    plt.grid()
+    plt.show()
