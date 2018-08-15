@@ -11,6 +11,7 @@
 
 #include "aes.h"
 #include "rsa.h"
+#include "des.h"
 
 DIGIT_T m[MAXDIGITS],out[MAXDIGITS],x,y;
 
@@ -170,6 +171,21 @@ int main(void)
             {
                 mpModExp(out,m,PrivExp,Mod,MAXDIGITS);
             }
+            UART1_Write('e');
+            for(i = 0;i < MAXDIGITS;i++)
+            {
+                sprintf(buf,"%02x",out[i]);
+                ghetto_puts(buf);
+            }
+            ghetto_puts("\r\n");
+        }
+        else if(buf[0] == 'd')
+        {
+            fetchBytes(buf + 1,in);
+            PORTB |= (1 << 10);
+            des_enc(out, in, key);
+            // mpModExp(out,m,PrivExp,Mod,MAXDIGITS);
+            PORTB &= ~(1 << 10);
             UART1_Write('e');
             for(i = 0;i < MAXDIGITS;i++)
             {

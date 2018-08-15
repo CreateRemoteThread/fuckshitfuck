@@ -14,6 +14,7 @@
         <itemPath>mcc_generated_files/traps.h</itemPath>
       </logicalFolder>
       <itemPath>aes.h</itemPath>
+      <itemPath>des.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -33,6 +34,7 @@
       </logicalFolder>
       <itemPath>main.c</itemPath>
       <itemPath>aes.c</itemPath>
+      <itemPath>des.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
