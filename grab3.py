@@ -17,8 +17,8 @@ WRITE_FILE = None
 # VRANGE_PRIMARY = 0.05 # for EM probe
 VRANGE_PRIMARY = 0.1
 
-RAND_LEN = 16
-RAND_KEY = "r"
+RAND_LEN = 8
+RAND_KEY = "d"
 FIXED_PT = False
 
 def fix_out(in_str):
