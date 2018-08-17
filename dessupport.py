@@ -4,7 +4,7 @@ import math
 import matplotlib.pyplot as plt
 
 KEY = "\x2b\x7e\x15\x16\x28\xae\xd2\xa6"
-PT  = "\xf0\xf0\xf0\xf0\x0f\x0f\x0f\x0f"
+PT  = "\xff\xff\xff\xff\xff\xff\xff\xff"
 
 KEY_EXP = "".join([bin(ord(x))[2:].rjust(8,"0") for x in KEY])
 PT_EXP = "".join([bin(ord(x))[2:].rjust(8,"0") for x in PT])
@@ -78,9 +78,15 @@ def __create_subkeys(blk):
 def mapToInteger(in_s):
   in_r = in_s[::-1]
   out = 0
-  for i in range(0,6):
+  for ix in range(0,6):
+    i = int(ix)
     out += math.pow(2,i) * in_r[i]
   return out
+
+def convertToSboxIndex(in_int):
+  in_bin = [int(b) for b in bin(in_int)[2:].rjust(8,"0")]
+  out_bin = [in_bin[2],in_bin[7],in_bin[3],in_bin[4],in_bin[5],in_bin[6]]
+  return int(mapToInteger(out_bin))
 
 class desIntermediateValue:
   def __init__(self):
@@ -94,16 +100,16 @@ class desIntermediateValue:
 
   def generateSbox(self,byte_posn,key):
     tmp_d = int(mapToInteger(self.d_ex[byte_posn]))
-    tmp_d ^= int(key)
-    # print tmp_d
-    a = SBOX[tmp_d >> 1]
+    tmp_d ^= int(key) 
+    a = SBOX[convertToSboxIndex(tmp_d) >> 1]
     if tmp_d % 2 == 1:
       return a ^ 0x0F
     else:
       return a >> 4
 
 if __name__ == "__main__":
+  expand_data_npz = expand_data
   d = desIntermediateValue()
   d.preprocess(PT)
   for i in range(0,48):
-    print "%d:%d" % (i,d.generateSbox(0,i))
+    print "Key candidate %02x: Sbox output: %02x" % (i,d.generateSbox(0,i))

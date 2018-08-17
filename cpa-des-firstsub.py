@@ -10,8 +10,8 @@ import glob
 import binascii
 from dessupport import desIntermediateValue
 
-TRACE_OFFSET = 30000
-TRACE_LENGTH = 80000
+TRACE_OFFSET = 100000
+TRACE_LENGTH = 50000
 
 def loadTraces(fns):
   dx = np.load(fns,"r")
