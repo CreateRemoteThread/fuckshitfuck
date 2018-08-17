@@ -10,7 +10,7 @@ import glob
 import binascii
 from dessupport import desIntermediateValue
 
-TRACE_OFFSET = 100000
+TRACE_OFFSET = 120000
 TRACE_LENGTH = 50000
 
 def loadTraces(fns):
@@ -33,7 +33,7 @@ def deriveKey(data,plaintexts):
       if tnum not in desManager.keys():
         desManager[tnum] = desIntermediateValue()
         desManager[tnum].preprocess(plaintexts[tnum])
-      hyp[tnum] = bin(desManager[tnum].generateSbox(0,kguess)).count("1")
+      hyp[tnum] = bin(desManager[tnum].generateSbox(1,kguess)).count("1")
     meanh = np.mean(hyp,dtype=np.float64)
     meant = np.mean(data,axis=0,dtype=np.float64)[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
     for tnum in range(0,len(plaintexts)):
