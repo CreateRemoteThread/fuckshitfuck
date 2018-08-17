@@ -37,10 +37,15 @@ def encryptAndTrace_2CH(ps,in_string,cnt):
   dataA = ps.getDataV('A',nSamples,returnOverflow=False)
   dataB = ps.getDataV('B',nSamples,returnOverflow=False)
   countUseful = 0
+  firstUseful = 0
+  FIRST_USEFUL = 1
   for i in range(0,nSamples):
     if dataB[i] > 3.0:
+      firstUseful += FIRST_USEFUL
       countUseful += 1
-  print "%d : %s:%s (approximately %d useful)" % (cnt,in_string.rstrip(),decrypt_text,countUseful)
+    elif firstUseful > 0:
+      FIRST_USEFUL = 0
+  print "%d : %s:%s (approximately %d useful, %d in first useful block)" % (cnt,in_string.rstrip(),decrypt_text,countUseful,firstUseful)
   if decrypt_text[0] != 'e':
     print "device restarted, waitng for stability"
     ser.close()
