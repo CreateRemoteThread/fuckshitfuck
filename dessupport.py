@@ -101,8 +101,6 @@ class desIntermediateValue:
     d = permute(IPTAB,expand_data_npz(MyPT))
     d_ex = permute(ETAB,d[32:])
     self.d_ex = [d_ex[i:i+6] for i in xrange(0,len(d_ex),6)]
-    # print "D_ex is",
-    # print self.d_ex
 
   def generateSbox(self,byte_posn,key):
     tmp_d = int(mapToInteger(self.d_ex[byte_posn]))

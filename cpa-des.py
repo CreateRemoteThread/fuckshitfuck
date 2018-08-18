@@ -11,7 +11,7 @@ import binascii
 from dessupport import desIntermediateValue
 
 TRACE_OFFSET = 0
-TRACE_LENGTH = 16100
+TRACE_LENGTH = 0
 
 def loadTraces(fns):
   dx = np.load(fns,"r")
@@ -20,6 +20,7 @@ def loadTraces(fns):
 MAX_BYTES = 8
 
 def deriveKey(data,plaintexts):
+  lastRound = 0
   bestguess = [0] * 8
   desManager = {}
   for bnum in range(0,MAX_BYTES):
@@ -43,14 +44,20 @@ def deriveKey(data,plaintexts):
         tdiff = data[tnum,TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH] - meant
         sumnum = sumnum + (hdiff * tdiff)
         sumden1 = sumden1 + hdiff * hdiff
-        sumden2 = sumden2 + tdiff * tdiff        
-      cpaoutput[kguess] = sumnum / np.sqrt(sumden1 * sumden2)
+        sumden2 = sumden2 + tdiff * tdiff
+      d_ = np.sqrt(sumden1 * sumden2)
+      d = np.zeros(len(d_))
+      for d_index in range(0,len(d_)):
+        if d_[d_index] == 0.0:
+          d[d_index] = 1.0
+        else:
+          d[d_index] = d_[d_index]
+      cpaoutput[kguess] = sumnum / d
       maxcpa[kguess] = max(abs(cpaoutput[kguess]))
-    # print maxcpa
-    # print maxcpa[np.argmax(maxcpa)]
     plt.plot(range(0,48),maxcpa)
     bestguess[bnum] = np.argmax(maxcpa)
     sortedcpa = np.argsort(maxcpa)[::-1]
+    lastRound = bestguess[bnum]
     print "Selected: %02x; CPA: %f, %f, %f" % (bestguess[bnum], maxcpa[bestguess[bnum]], maxcpa[sortedcpa[1]],maxcpa[sortedcpa[2]])
   return bestguess
 
@@ -83,6 +90,9 @@ if __name__ == "__main__":
     sys.exit(0)
   print "Stage 1: Loading plaintexts..."
   data,plaintexts = loadTraces(fn)
+  if TRACE_LENGTH == 0:
+    TRACE_LENGTH = len(data[0])
+    print "Setting trace length to %d" % TRACE_LENGTH
   print "Stage 2: Deriving key... wish me luck!"
   r = deriveKey(data,plaintexts)
   plt.title("DES SubKey Correlation Overview")
