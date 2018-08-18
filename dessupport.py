@@ -95,6 +95,7 @@ def convertToSboxIndex(in_int):
 
 class desIntermediateValue:
   def __init__(self):
+    self.cumulative = 0
     pass
 
   def preprocess(self,MyPT):
@@ -108,12 +109,24 @@ class desIntermediateValue:
     tmp_d_bin = [ord(b) - ord("0") for b in bin(tmp_d)[2:].rjust(6,"0")]
     n = (tmp_d_bin[0] << 5) + (tmp_d_bin[5] << 4) + (tmp_d_bin[1] << 3) + (tmp_d_bin[2] << 2) + (tmp_d_bin[3] << 1) + tmp_d_bin[4]
     x = SBOX[(n >> 1) + (byte_posn * 32)]
-    # return x
     if n % 2 == 1:
-      return x & 0x0F
+      x = x & 0x0F
     else:
-      return x >> 4
+      x = x >> 4
+    # return x
+    if byte_posn == 0:
+      return x
+    else:
+      x_cumulative = self.cumulative << 4
+      x_cumulative |= x
+      return x_cumulative
+      # self.cumulative <<= 4
+      # self.cumulative |= x
+      # return self.cumulative
 
+  def saveCumulative(self,byte_posn,key):
+    self.cumulative = self.generateSbox(byte_posn,key)
+  
 if __name__ == "__main__":
   expand_data_npz = expand_data
   d = desIntermediateValue()

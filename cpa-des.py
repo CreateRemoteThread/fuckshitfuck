@@ -20,7 +20,6 @@ def loadTraces(fns):
 MAX_BYTES = 8
 
 def deriveKey(data,plaintexts):
-  lastRound = 0
   bestguess = [0] * 8
   desManager = {}
   for bnum in range(0,MAX_BYTES):
@@ -39,7 +38,7 @@ def deriveKey(data,plaintexts):
         hyp[tnum] = bin(desManager[tnum].generateSbox(bnum,kguess)).count("1")
       meanh = np.mean(hyp,dtype=np.float64)
       meant = np.mean(data,axis=0,dtype=np.float64)[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
-      for tnum in range(0,200):
+      for tnum in range(0,plaintexts[:,0].size):
         hdiff = (hyp[tnum] - meanh)
         tdiff = data[tnum,TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH] - meant
         sumnum = sumnum + (hdiff * tdiff)
@@ -57,8 +56,9 @@ def deriveKey(data,plaintexts):
     plt.plot(range(0,48),maxcpa)
     bestguess[bnum] = np.argmax(maxcpa)
     sortedcpa = np.argsort(maxcpa)[::-1]
-    lastRound = bestguess[bnum]
     print "Selected: %02x; CPA: %f, %f, %f" % (bestguess[bnum], maxcpa[bestguess[bnum]], maxcpa[sortedcpa[1]],maxcpa[sortedcpa[2]])
+    for tnum_cumulative in range(0,plaintexts[:,0].size):
+      desManager[tnum_cumulative].saveCumulative(byte_posn,bestguess[bnum])
   return bestguess
 
 fn = None
