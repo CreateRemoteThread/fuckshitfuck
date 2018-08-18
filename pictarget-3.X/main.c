@@ -182,10 +182,10 @@ int main(void)
         else if(buf[0] == 'd')
         {
             fetchBytes(buf + 1,in);
-            PORTB |= (1 << 10);
+            // PORTB |= (1 << 10);
             des_enc(out, in, key);
             // mpModExp(out,m,PrivExp,Mod,MAXDIGITS);
-            PORTB &= ~(1 << 10);
+            // PORTB &= ~(1 << 10);
             UART1_Write('e');
             for(i = 0;i < MAXDIGITS;i++)
             {

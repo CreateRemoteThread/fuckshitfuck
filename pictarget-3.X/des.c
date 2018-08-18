@@ -278,10 +278,13 @@ uint32_t des_f(uint32_t r, uint8_t *kr){
 	permute((uint8_t*)e_permtab, (uint8_t*)&r, (uint8_t*)&data);
 	for(i=0; i<7; ++i)
 		((uint8_t*)&data)[i] ^= kr[i];
-	
+        
 	/* Sbox substitution */
 	data = splitin6bitwords(data);
 	sbp=(uint8_t*)sbox;
+
+    PORTB |= (1 << 10);
+
 	for(i=0; i<8; ++i){
 		uint8_t x;
 		x = substitute(((uint8_t*)&data)[i], sbp);
@@ -289,6 +292,7 @@ uint32_t des_f(uint32_t r, uint8_t *kr){
 		t |= x;
 		sbp += 32;
 	}
+    PORTB &= ~(1 << 10);
 	changeendian32(&t);
 		
 	permute((uint8_t*)p_permtab,(uint8_t*)&t, (uint8_t*)&ret);
@@ -325,7 +329,6 @@ void des_enc(void *out, const void *in, const void *key){
 			shiftkey(k);
 		permute((uint8_t*)pc2_permtab, k, kr);
 		R ^= des_f(L, kr);
-
 	}
 	/* L <-> R*/
 	R ^= L;
