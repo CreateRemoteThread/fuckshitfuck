@@ -143,11 +143,10 @@ class desRecombine:
   def __init__(self,pt):
     pt_temp = []
     for pt_byte in pt:
-      px = [ord(x) - ord('0') for x in bin(pt_byte)[2:].rjust(6,"0")]
-      pt_temp += [0,0]
-      pt_temp += [px[0], px[2], px[3], px[4], px[5], px[1]]
+      pt_temp += [ord(x) - ord('0') for x in bin(pt_byte)[2:].rjust(6,"0")]
+      # pt_temp += [0,0]
+      # pt_temp += [px[0], px[2], px[3], px[4], px[5], px[1]]
     pt_temp_recovered = [int(mapToInteger(pt_temp[i:i + 8],8)) for i in xrange(0, len(pt_temp), 8)]
-    print "REVERSED splitin6bitwords",
     print [hex(i) for i in pt_temp_recovered]
     inv_pt = inv_permute(PC2TAB,pt_temp) # 48 bits in, 56 bits out
     print inv_pt
@@ -163,6 +162,7 @@ class desRecombine:
     del R[len(R) - 1]
     key_recomb = L + R
     pt_temp = inv_permute(PC1TAB,key_recomb)
+    print "INVERTED PC1"
     print pt_temp
     # print len(key_recomb)
     # print max(PC1TAB)
@@ -170,7 +170,6 @@ class desRecombine:
     print len(pt_temp)
     pt_temp_recovered = [int(mapToInteger(pt_temp[i:i + 8],8)) for i in xrange(0, len(pt_temp), 8)]
     print pt_temp_recovered
-     
 
 class desIntermediateValue:
   def __init__(self):
@@ -214,7 +213,7 @@ def test_splitin6bits():
   pass
 
 if __name__ == "__main__":
-  print len(PC1TAB)
-  d = desSplit(ORIG_KEY)
+  # print len(PC1TAB)
+  # d = desSplit(ORIG_KEY)
   # expand_data_npz = expand_data
-  # d = desRecombine(RECOVERED) 
+  d = desRecombine(RECOVERED) 
