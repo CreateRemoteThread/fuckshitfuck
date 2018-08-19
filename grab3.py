@@ -102,8 +102,8 @@ if __name__ == "__main__":
       ANALOG_OFFSET = float(value)
     elif arg in ("-w","--write_file"):
       WRITE_FILE = value
-  if WRITE_FILE is None:
-    print "fatal, you MUST specify an output file via -w"
+  if WRITE_FILE is None and NUM_CAPTURES != 1:
+    print "FATAL, you MUST specify an output file via -w"
     sys.exit(0)
   print "WRITE_FILE = %s" % WRITE_FILE
   print "SAMPLE_RATE = %d" % SAMPLE_RATE

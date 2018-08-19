@@ -23,10 +23,10 @@ def deriveKey(data,plaintexts):
   bestguess = [0] * 8
   desManager = {}
   for bnum in range(0,MAX_BYTES):
-    cpaoutput = [0]  * 48
-    maxcpa = [0] * 48
+    cpaoutput = [0]  * 64
+    maxcpa = [0] * 64
     print "Correlating hypotheses for byte %d" % bnum
-    for kguess in range(0,48):
+    for kguess in range(0,64):
       sumnum = np.zeros(TRACE_LENGTH)
       sumden1 = np.zeros(TRACE_LENGTH)
       sumden2 = np.zeros(TRACE_LENGTH)
@@ -53,7 +53,7 @@ def deriveKey(data,plaintexts):
           d[d_index] = d_[d_index]
       cpaoutput[kguess] = sumnum / d
       maxcpa[kguess] = max(abs(cpaoutput[kguess]))
-    plt.plot(range(0,48),maxcpa)
+    plt.plot(range(0,64),maxcpa)
     bestguess[bnum] = np.argmax(maxcpa)
     sortedcpa = np.argsort(maxcpa)[::-1]
     print "Selected: %02x; CPA: %f, %f, %f" % (bestguess[bnum], maxcpa[bestguess[bnum]], maxcpa[sortedcpa[1]],maxcpa[sortedcpa[2]])
