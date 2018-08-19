@@ -4,6 +4,8 @@ import sys
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+from Crypto.Cipher import DES
+import binascii
 
 KEY = "\x2b\x7e\x15\x16\x28\xae\xd2\xa6"
 # PT  = "\xff\xff\xff\xff\xff\xff\xff\xff"
@@ -73,10 +75,10 @@ def permute(table,blk):
 #     out[i] = blk[table[i]]
 #   return out
  
-def inv_permute(table,blk):
-  pt = [2] * (max(table) + 1)
+def inv_permute(table,blk,default_char=2):
+  pt = [default_char] * (max(table) + 1)
   for index in range(0,len(blk)):
-    if pt[table[index]] == 2:
+    if pt[table[index]] == 2 or pt[table[index]] == 3:
       pt[table[index]] = int(blk[index])
     else:
       if pt[table[index]] != int(blk[index]):
@@ -89,7 +91,7 @@ def mapToInteger(in_s,bits=6):
   out = 0
   for ix in range(0,bits):
     i = ix
-    if in_r[i] != 2:
+    if (in_r[i] != 2) and (in_r[i] != 3):
       out += math.pow(2,i) * in_r[i]
     else:
       pass
@@ -100,16 +102,7 @@ def convertToSboxIndex(in_int):
   out_bin = [in_bin[2],in_bin[7],in_bin[3],in_bin[4],in_bin[5],in_bin[6]]
   return int(mapToInteger(out_bin))
 
-# this is from a 'forced key'
-# RECOVERED = [0x21, 0x08, 0x28, 0x30, 0x29, 0x2c, 0x13, 0x3f]
-
-RECOVERED = [0x22, 0x10, 0x30, 0x21, 0x32, 0x38, 0x07, 0x3f]
-# COVERED = [0x22, 0x10, 0x30, 0x21, 0x32, 0x38, 0x07, 0x3f]
-
-# this is the real recovered
-# RECOVERED = [0x22, 0x10, 0x2d, 0x21, 0x14, 0x05, 0x07, 0x22]
-
-ORIG_KEY = [0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6]
+# ORIG_KEY = [0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6]
 
 def bytesToBitstring(in_str):
   out = []
@@ -119,7 +112,6 @@ def bytesToBitstring(in_str):
 
 def bitstringToBytes(in_str):
   return [int(mapToInteger(in_str[i:i + 8],8)) for i in xrange(0, len(in_str), 8)]
-
 
 class desSplit:
   def __init__(self,pt):
@@ -139,6 +131,9 @@ class desSplit:
     for x in px_bytes:   # we know the reference infrastructure is correct
       print "%02x" % x,  # but there must be a correlated leak...
 
+def stringify(hex_in):
+  return "".join([chr(hexbyte) for hexbyte in hex_in])
+
 class desRecombine:
   def __init__(self,pt):
     pt_temp = []
@@ -147,29 +142,60 @@ class desRecombine:
       # pt_temp += [0,0]
       # pt_temp += [px[0], px[2], px[3], px[4], px[5], px[1]]
     pt_temp_recovered = [int(mapToInteger(pt_temp[i:i + 8],8)) for i in xrange(0, len(pt_temp), 8)]
-    print [hex(i) for i in pt_temp_recovered]
+    # print [hex(i) for i in pt_temp_recovered]
     inv_pt = inv_permute(PC2TAB,pt_temp) # 48 bits in, 56 bits out
-    print inv_pt
+    # print inv_pt
+    # print len(inv_pt)
     inv_pt_hexlify = [int(mapToInteger(inv_pt[i:i + 8],8)) for i in xrange(0, len(inv_pt), 8)]
-    print "INVERTED PC2"
-    print [hex(h) for h in inv_pt_hexlify]
-    L = inv_pt[:28]
-    R = inv_pt[28:]
-    # invert the left shift
-    L = [L[len(L) - 1]] + L
-    del L[len(L) - 1]
-    R = [R[len(R) - 1]] + L
-    del R[len(R) - 1]
-    key_recomb = L + R
-    pt_temp = inv_permute(PC1TAB,key_recomb)
-    print "INVERTED PC1"
-    print pt_temp
-    # print len(key_recomb)
-    # print max(PC1TAB)
-    pt_temp += [0]
-    print len(pt_temp)
-    pt_temp_recovered = [int(mapToInteger(pt_temp[i:i + 8],8)) for i in xrange(0, len(pt_temp), 8)]
-    print pt_temp_recovered
+    # print "INVERTED PC2"
+    # print [hex(h) for h in inv_pt_hexlify]
+    REAL_INVPC2 = [0xc0, 0x85, 0x66, 0x9d, 0x75, 0xc6, 0x7d]
+    x = bytesToBitstring(REAL_INVPC2)
+    for i in range(0,len(inv_pt)):
+      if inv_pt[i] != x[i]:
+        pass
+        # print "mismatch!",
+        # print inv_pt[i]
+    # at this point, inv_pt is our "source material"
+    inv_pt_L = inv_pt[:28]
+    inv_pt_L = [inv_pt_L[27]] + inv_pt_L[:27]
+    inv_pt_R = inv_pt[28:]
+    inv_pt_R = [inv_pt_R[27]] + inv_pt_R[:27]
+    inv_pt = inv_pt_L + inv_pt_R
+    # print inv_pt
+    # the last bit is always lost...
+    inv_pc1 = inv_permute(PC1TAB,inv_pt,3) + [3]
+    # print inv_pc1
+    # REAL_KEY = [0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6]
+    # real_exp = bytesToBitstring(REAL_KEY)
+    # for i in range(0,len(real_exp)):
+    #   if inv_pc1[i] != real_exp[i]:
+    #     print "mismatch! %d" % inv_pc1[i]
+    self.inv_pc1 = inv_pc1
+
+  # input in bytestring format
+  def bruteKey(self,knownPlain,knownCipher):
+    for i in range(0,256):
+      # print "TRYING %d" % i
+      test_template = [ord(x) - ord('0') for x in bin(i)[2:].rjust(8,"0")]
+      # print test_template
+      try_key = [0] * len(self.inv_pc1)
+      for tposn in range(0,len(self.inv_pc1)):
+        if self.inv_pc1[tposn] == 2:
+          try_key[tposn] = test_template.pop()
+        elif try_key[tposn] == 3:
+          self.inv_pc1[tposn] = 0
+        else:
+          try_key[tposn] = self.inv_pc1[tposn]
+      # print try_key
+      try_hexlified = bitstringToBytes(try_key)
+      try_hexstr = "".join([chr(xt) for xt in try_hexlified])
+      # print binascii.hexlify(try_hexstr)
+      d = DES.new(try_hexstr,DES.MODE_ECB)
+      if d.encrypt(stringify(knownPlain)) == stringify(knownCipher):
+        print "GOTCHA: %s" % binascii.hexlify(try_hexstr)
+      # else:
+      #   print binascii.hexlify(d.encrypt(stringify(knownPlain)))
 
 class desIntermediateValue:
   def __init__(self):
@@ -205,15 +231,15 @@ class desIntermediateValue:
   def saveCumulative(self,byte_posn,key):
     self.cumulative = self.generateSbox(byte_posn,key)
   
-# TEST_KEY = [0xc0, 0x85, 0x66, 0x9d, 0x75, 0xc6, 0x7d ]
-
 TEST_KEY = [0x3f, 0x3f, 0x3f, 0x2f, 0x20, 0x10, 0x1f]
 
 def test_splitin6bits():
   pass
 
+# 2a7e141628aed2a6
+# 2b7e151628aed2a6
+
 if __name__ == "__main__":
-  # print len(PC1TAB)
-  # d = desSplit(ORIG_KEY)
-  # expand_data_npz = expand_data
-  d = desRecombine(RECOVERED) 
+  RECOVERED = [0x22, 0x10, 0x30, 0x21, 0x32, 0x38, 0x07, 0x3f]
+  d = desRecombine(RECOVERED)
+  d.bruteKey([0xFF, 0xFF, 0xFF, 0xFF, 0xAA, 0xAA, 0xAA, 0xAA],[0x51,0x0e,0xd9,0x41,0xf4, 0x63, 0x31, 0x9b])
