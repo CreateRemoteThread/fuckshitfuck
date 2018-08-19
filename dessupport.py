@@ -3,6 +3,7 @@
 import sys
 import math
 import matplotlib.pyplot as plt
+import numpy as np
 
 KEY = "\x2b\x7e\x15\x16\x28\xae\xd2\xa6"
 # PT  = "\xff\xff\xff\xff\xff\xff\xff\xff"
@@ -58,7 +59,6 @@ SBOX = [
 def __expand_key(in_str):
   return [ord(i) - ord('0') for i in "".join([bin(ord(x))[2:-1].rjust(7,"0") for x in in_str])]
 
-
 def expand_data(in_str):
   return [ord(i) - ord('0') for i in "".join([bin(ord(x))[2:].rjust(8,"0") for x in in_str])]
 
@@ -69,23 +69,26 @@ def expand_data_npz(in_str):
 def permute(table,blk):
   return list(map(lambda x: blk[x], table))
 
-def __create_subkeys(blk):
-  Kn = []
-  i = 0
-  L = blk[:28]
-  R = blk[28:]
-  L.append(L[0])
-  del L[0]
-  R.append(R[0])
-  del R[0]
-  return permute(PC2TAB,L+R)
+def inv_permute(table,blk):
+  pt = [2] * (max(table) + 1)
+  for index in range(0,len(blk)):
+    if pt[table[index]] == 2:
+      pt[table[index]] = int(blk[index])
+    else:
+      if pt[table[index]] != int(blk[index]):
+        print "fail - mismatch in inv_permute"
+        sys.exit(0)
+  return pt
 
-def mapToInteger(in_s):
+def mapToInteger(in_s,bits=6):
   in_r = in_s[::-1]
   out = 0
-  for ix in range(0,6):
-    i = int(ix)
-    out += math.pow(2,i) * in_r[i]
+  for ix in range(0,bits):
+    i = ix
+    if in_r[i] != 2:
+      out += math.pow(2,i) * in_r[i]
+    else:
+      pass
   return out
 
 def convertToSboxIndex(in_int):
@@ -93,9 +96,48 @@ def convertToSboxIndex(in_int):
   out_bin = [in_bin[2],in_bin[7],in_bin[3],in_bin[4],in_bin[5],in_bin[6]]
   return int(mapToInteger(out_bin))
 
+# this is from a 'forced key'
+# RECOVERED = [0x21, 0x08, 0x28, 0x30, 0x29, 0x2c, 0x13, 0x3f]
+
+# this is the real recovered
+RECOVERED = [0x22, 0x10, 0x2d, 0x21, 0x14, 0x05, 0x07, 0x22]
+
+class desRecombine:
+  def __init__(self,pt):
+    pt_temp = []
+    for pt_byte in pt:
+      px = [ord(x) - ord('0') for x in bin(pt_byte)[2:].rjust(6,"0")]
+      pt_temp += [px[0], px[2], px[3], px[4], px[5], px[1]]
+    pt_temp_recovered = [int(mapToInteger(pt_temp[i:i + 8],8)) for i in xrange(0, len(pt_temp), 8)]
+    print "REVERSED splitin6bitwords",
+    print [hex(i) for i in pt_temp_recovered]
+    inv_pt = inv_permute(PC2TAB,pt_temp) # 48 bits in, 56 bits out
+    print inv_pt
+    inv_pt_hexlify = [int(mapToInteger(inv_pt[i:i + 8],8)) for i in xrange(0, len(inv_pt), 8)]
+    print "INVERTED PC2"
+    print [hex(h) for h in inv_pt_hexlify]
+    L = inv_pt[:28]
+    R = inv_pt[28:]
+    # invert the left shift
+    L = [L[len(L) - 1]] + L
+    del L[len(L) - 1]
+    R = [R[len(R) - 1]] + L
+    del R[len(R) - 1]
+    key_recomb = L + R
+    pt_temp = inv_permute(PC1TAB,key_recomb)
+    print pt_temp
+    # print len(key_recomb)
+    # print max(PC1TAB)
+    pt_temp += [0]
+    print len(pt_temp)
+    pt_temp_recovered = [int(mapToInteger(pt_temp[i:i + 8],8)) for i in xrange(0, len(pt_temp), 8)]
+    print pt_temp_recovered
+     
+
 class desIntermediateValue:
   def __init__(self):
     self.cumulative = 0
+    self.disableCumulative = False
     pass
 
   def preprocess(self,MyPT):
@@ -113,24 +155,26 @@ class desIntermediateValue:
       x = x & 0x0F
     else:
       x = x >> 4
-    # return x
+    if self.disableCumulative:
+      return x
     if byte_posn == 0:
       return x
     else:
       x_cumulative = self.cumulative << 4
       x_cumulative |= x
+      x_cumulative &= 0xFF
       return x_cumulative
-      # self.cumulative <<= 4
-      # self.cumulative |= x
-      # return self.cumulative
 
   def saveCumulative(self,byte_posn,key):
     self.cumulative = self.generateSbox(byte_posn,key)
   
+# TEST_KEY = [0xc0, 0x85, 0x66, 0x9d, 0x75, 0xc6, 0x7d ]
+
+TEST_KEY = [0x3f, 0x3f, 0x3f, 0x2f, 0x20, 0x10, 0x1f]
+
+def test_splitin6bits():
+  pass
+
 if __name__ == "__main__":
   expand_data_npz = expand_data
-  d = desIntermediateValue()
-  d.preprocess(PT)
-  for r in range(0,8):
-    for i in range(0,48):
-      print "Round %d Key candidate %02x: Sbox output: %02x" % (r, i,d.generateSbox(r,i))
+  d = desRecombine(RECOVERED) 
