@@ -15,9 +15,6 @@ PT_EXP = "".join([bin(ord(x))[2:].rjust(8,"0") for x in PT])
 PC1TAB = [56, 48, 40, 32, 24, 16,  8, 0, 57, 49, 41, 33, 25, 17, 9,  1, 58, 50, 42, 34, 26, 18, 10,  2, 59, 51, 43, 35, 62, 54, 46, 38, 30, 22, 14, 6, 61, 53, 45, 37, 29, 21, 13,  5, 60, 52, 44, 36, 28, 20, 12,  4, 27, 19, 11, 3]
 PC2TAB = [13, 16, 10, 23,  0,  4, 2, 27, 14,  5, 20,  9, 22, 18, 11,  3, 25,  7, 15,  6, 26, 19, 12,  1, 40, 51, 30, 36, 46, 54, 29, 39, 50, 44, 32, 47, 43, 48, 38, 55, 33, 52, 45, 41, 49, 35, 28, 31]
 IPTAB = [57, 49, 41, 33, 25, 17, 9,  1, 59, 51, 43, 35, 27, 19, 11, 3, 61, 53, 45, 37, 29, 21, 13, 5, 63, 55, 47, 39, 31, 23, 15, 7, 56, 48, 40, 32, 24, 16, 8,  0, 58, 50, 42, 34, 26, 18, 10, 2, 60, 52, 44, 36, 28, 20, 12, 4, 62, 54, 46, 38, 30, 22, 14, 6]
-
-# IPTAB = [8,  8, 58, 50, 42, 34, 26, 18, 10, 2, 60, 52, 44, 36, 28, 20, 12, 4, 62, 54, 46, 38, 30, 22, 14, 6, 64, 56, 48, 40, 32, 24, 16, 8, 57, 49, 41, 33, 25, 17,  9, 1, 59, 51, 43, 35, 27, 19, 11, 3, 61, 53, 45, 37, 29, 21, 13, 5, 63, 55, 47, 39, 31, 23, 15, 7]
-
 ETAB = [ 31,  0,  1,  2,  3,  4, 3,  4,  5,  6,  7,  8, 7,  8,  9, 10, 11, 12,11, 12, 13, 14, 15, 16,15, 16, 17, 18, 19, 20,19, 20, 21, 22, 23, 24,23, 24, 25, 26, 27, 28, 27, 28, 29, 30, 31,  0]
 
 SBOX = [
@@ -69,6 +66,13 @@ def expand_data_npz(in_str):
 def permute(table,blk):
   return list(map(lambda x: blk[x], table))
 
+# def permute(table,blk):
+#   out = [0] * len(table)
+#   for i in range(0,len(table)):
+#     print table[i]
+#     out[i] = blk[table[i]]
+#   return out
+ 
 def inv_permute(table,blk):
   pt = [2] * (max(table) + 1)
   for index in range(0,len(blk)):
@@ -99,14 +103,48 @@ def convertToSboxIndex(in_int):
 # this is from a 'forced key'
 # RECOVERED = [0x21, 0x08, 0x28, 0x30, 0x29, 0x2c, 0x13, 0x3f]
 
+RECOVERED = [0x22, 0x10, 0x30, 0x21, 0x32, 0x38, 0x07, 0x3f]
+# COVERED = [0x22, 0x10, 0x30, 0x21, 0x32, 0x38, 0x07, 0x3f]
+
 # this is the real recovered
-RECOVERED = [0x22, 0x10, 0x2d, 0x21, 0x14, 0x05, 0x07, 0x22]
+# RECOVERED = [0x22, 0x10, 0x2d, 0x21, 0x14, 0x05, 0x07, 0x22]
+
+ORIG_KEY = [0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6]
+
+def bytesToBitstring(in_str):
+  out = []
+  for b in in_str:
+    out += [ord(x) - ord('0') for x in bin(b)[2:].rjust(8,"0")]
+  return out
+
+def bitstringToBytes(in_str):
+  return [int(mapToInteger(in_str[i:i + 8],8)) for i in xrange(0, len(in_str), 8)]
+
+
+class desSplit:
+  def __init__(self,pt):
+    px = bytesToBitstring(pt)
+    px_pc1 = permute(PC1TAB,px)
+    # print len(px_pc1)
+    shiftKeyL = px_pc1[:28]
+    shiftKeyL.append( shiftKeyL[0] )
+    del shiftKeyL[0]
+    shiftKeyR = px_pc1[28:]
+    shiftKeyR.append(shiftKeyR[0])
+    del shiftKeyR[0]
+    shiftedKey = shiftKeyL + shiftKeyR
+    print len(shiftedKey)
+    px_pc2 = permute(PC2TAB,shiftedKey)
+    px_bytes = bitstringToBytes(px_pc2)
+    for x in px_bytes:   # we know the reference infrastructure is correct
+      print "%02x" % x,  # but there must be a correlated leak...
 
 class desRecombine:
   def __init__(self,pt):
     pt_temp = []
     for pt_byte in pt:
       px = [ord(x) - ord('0') for x in bin(pt_byte)[2:].rjust(6,"0")]
+      pt_temp += [0,0]
       pt_temp += [px[0], px[2], px[3], px[4], px[5], px[1]]
     pt_temp_recovered = [int(mapToInteger(pt_temp[i:i + 8],8)) for i in xrange(0, len(pt_temp), 8)]
     print "REVERSED splitin6bitwords",
@@ -176,5 +214,7 @@ def test_splitin6bits():
   pass
 
 if __name__ == "__main__":
-  expand_data_npz = expand_data
-  d = desRecombine(RECOVERED) 
+  print len(PC1TAB)
+  d = desSplit(ORIG_KEY)
+  # expand_data_npz = expand_data
+  # d = desRecombine(RECOVERED) 
