@@ -12,13 +12,14 @@ import numpy as np
 SAMPLE_RATE = 64000000 
 NUM_SAMPLES = 50000
 NUM_CAPTURES = 1000
-ANALOG_OFFSET = -0.1
+# ANALOG_OFFSET = -0.1
+ANALOG_OFFSET = -0.006 # for ATMega test board
 WRITE_FILE = None
-# VRANGE_PRIMARY = 0.05 # for EM probe
-VRANGE_PRIMARY = 0.1
+VRANGE_PRIMARY = 0.02 # for EM probe
+# VRANGE_PRIMARY = 0.1
 
-RAND_LEN = 8
-RAND_KEY = "d"
+RAND_LEN = 16
+RAND_KEY = "e"
 FIXED_PT = False
 
 def fix_out(in_str):

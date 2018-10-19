@@ -165,7 +165,7 @@ class desRecombine:
     # print inv_pt
     # the last bit is always lost...
     inv_pc1 = inv_permute(PC1TAB,inv_pt,3) + [3]
-    # print inv_pc1
+    print inv_pc1
     # REAL_KEY = [0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6]
     # real_exp = bytesToBitstring(REAL_KEY)
     # for i in range(0,len(real_exp)):

@@ -12,6 +12,7 @@ from dessupport import desIntermediateValue
 
 TRACE_OFFSET = 0
 TRACE_LENGTH = 0
+TRACE_MAX = 0
 
 def loadTraces(fns):
   dx = np.load(fns,"r")
@@ -20,6 +21,7 @@ def loadTraces(fns):
 MAX_BYTES = 8
 
 def deriveKey(data,plaintexts):
+  global TRACE_MAX
   bestguess = [0] * 8
   desManager = {}
   for bnum in range(0,MAX_BYTES):
@@ -30,15 +32,19 @@ def deriveKey(data,plaintexts):
       sumnum = np.zeros(TRACE_LENGTH)
       sumden1 = np.zeros(TRACE_LENGTH)
       sumden2 = np.zeros(TRACE_LENGTH)
-      hyp = zeros(plaintexts[:,0].size)
-      for tnum in range(0,plaintexts[:,0].size):
+      if TRACE_MAX == 0:
+        trace_count = plaintexts[:,0].size
+      else:
+        trace_count = TRACE_MAX
+      hyp = zeros(trace_count)
+      for tnum in range(0,trace_count):
         if tnum not in desManager.keys():
           desManager[tnum] = desIntermediateValue()
           desManager[tnum].preprocess(plaintexts[tnum])
         hyp[tnum] = bin(desManager[tnum].generateSbox(bnum,kguess)).count("1")
       meanh = np.mean(hyp,dtype=np.float64)
       meant = np.mean(data,axis=0,dtype=np.float64)[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
-      for tnum in range(0,plaintexts[:,0].size):
+      for tnum in range(0,trace_count):
         hdiff = (hyp[tnum] - meanh)
         tdiff = data[tnum,TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH] - meant
         sumnum = sumnum + (hdiff * tdiff)
@@ -73,7 +79,7 @@ def usage():
   print " -f : trace file (.npz from grab3.py)"
 
 if __name__ == "__main__":
-  opts, remainder = getopt.getopt(sys.argv[1:],"ho:n:f:",["help","offset=","samples=","file="])
+  opts, remainder = getopt.getopt(sys.argv[1:],"ho:n:f:c:",["help","offset=","samples=","file=","count="])
   for opt, arg in opts:
     if opt in ("-h","--help"):
       usage()
@@ -82,6 +88,8 @@ if __name__ == "__main__":
       TRACE_OFFSET = int(arg)
     elif opt in ("-n","--samples"):
       TRACE_LENGTH = int(arg)
+    elif opt in ("-c","--count"):
+      TRACE_MAX = int(arg)
     elif opt in ("-f","--file"):
       fn = arg
   print "TRACE_OFFSET = %d" % TRACE_OFFSET
