@@ -331,10 +331,11 @@ class DS1054Z(vxi11.Instrument):
             # print "LEN(BUFF) is %d" % len(buff)
             self.write(":WAVeform:STARt {0}".format(pos))
             # print ":WAVeform:STARt {0}".format(pos)
-            end_pos = min(pos + pnts, pos+max_byte_len-1)
+            end_pos = min(pos + pnts, pos+max_byte_len-1, end)
             self.write(":WAVeform:STOP {0}".format(end_pos))
             # print ":WAVeform:STOP {0}".format(end_pos)
             tmp_buff = self.query_raw(":WAVeform:DATA?")
+            # print tmp_buff
             # print len(tmp_buff)
             buff += DS1054Z.decode_ieee_block(tmp_buff)
             pos += max_byte_len
