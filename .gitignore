@@ -9,6 +9,8 @@ captures*/
 set*/
 sampledata/
 
+**/*.npz
+
 # C extensions
 *.so
 
