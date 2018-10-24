@@ -22,8 +22,8 @@ def usage():
   print " -f : savefile"
   print " -i : ip address of rigol scope (5555 must be open)"
 
-START_OFFSET = 1450000
-END_OFFSET = 1800000
+START_OFFSET = 1400000
+END_OFFSET = 1900000
 TRACE_COUNT = 5
 RAND_LEN = 16
 SAVEFILE = "lol.npz"
@@ -57,7 +57,7 @@ try:
 except:
   print "Could not connect to %s, can you netcat to 5555?" % IP_ADDR
 scope.write(":STOP")
-scope.write(":CHAN1:SCAL 0.001")
+scope.write(":CHAN1:SCAL 0.010")
 scope.write(":CHAN1:OFFS -0.055")
 
 print "Scale: {0}V".format(DS1054Z.format_si_prefix(scope.get_channel_scale(1)))
@@ -78,6 +78,7 @@ data_out = np.zeros((TRACE_COUNT,RAND_LEN),np.uint8)
 for i in range(0,TRACE_COUNT):
   scope.write(":STOP")
   scope.single()
+  time.sleep(1.0)
   rand_input = os.urandom(RAND_LEN)
   ser.write("e%s\n" % binascii.hexlify(rand_input))
   ctx_out = ser.readline().rstrip()
@@ -86,27 +87,14 @@ for i in range(0,TRACE_COUNT):
   if TEST_MODE is True:
     print "Test mode, counting useful cycles..."
     data_trigger = scope.get_waveform_samples("CHAN2",mode="RAW",start=START_OFFSET+1,end=END_OFFSET)
-    firstTrigger = 0
-    lastTrigger = 0
-    for i in range(0,len(data_trigger)):
-      if data_trigger[i] > 2.0 and firstTrigger == 0:
-        # print "SET TRIGGER %d" % i
-        firstTrigger = i
-      elif data_trigger[i] < 1.0 and firstTrigger != 0:
-        # print "END TRIGGER %d" % i
-        lastTrigger = i
-        break
-    if lastTrigger == 0:
-      lastTrigger = i
-    print "FIRST TRIGGER: %d" % firstTrigger
-    print "LAST TRIGGER: %d" % lastTrigger
-    print "USEFUL SAMPLES: %d"  % (lastTrigger - firstTrigger)
-    # get ready for some mother fucking matplotlib magic
-    fig,ax1 = plt.subplots()
-    ax1.plot(data_trigger)
-    ax2 = ax1.twinx()
-    ax2.plot(datax)
-    fig.tight_layout()
+    first_useful = next(x[0] for x in enumerate(data_trigger) if x[1] > 1.0)
+    last_useful = next(x[0] for x in enumerate(data_trigger[first_useful:]) if x[1] < 1.0)
+    print "Start Capture: (-o) %d" % START_OFFSET
+    print "Num Samples: (-n) %d" % (END_OFFSET - START_OFFSET)
+    print "First useful: %d" % first_useful
+    print "Last useful: %d" % last_useful
+    print data_trigger[0:50]
+    plt.plot(data_trigger)
     plt.show()
     sys.exit(0)
   if len(ctx_out) != (RAND_LEN * 2) + 1:
