@@ -57,7 +57,12 @@ try:
 except:
   print "Could not connect to %s, can you netcat to 5555?" % IP_ADDR
 scope.write(":STOP")
-scope.write(":CHAN1:SCAL 0.010")
+
+# atmega test
+# scope.write(":CHAN1:SCAL 0.010")
+# scope.write(":CHAN1:OFFS -0.055")
+
+scope.write(":CHAN1:SCAL 0.020")
 scope.write(":CHAN1:OFFS -0.055")
 
 print "Scale: {0}V".format(DS1054Z.format_si_prefix(scope.get_channel_scale(1)))
