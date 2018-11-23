@@ -8,6 +8,7 @@ import random
 from scipy.signal import butter,lfilter,freqz
 from numpy import *
 import getopt
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 TRIGGERS = 0
@@ -94,6 +95,8 @@ def usage():
   print " -F [samplerate] : plot fft, base freq in hz"
   print " -a : plot average trace"
   print " -s [samplerate] : plot spectrogram"
+
+mpl.rcParams['agg.path.chunksize'] = 10000 
 
 if __name__ == "__main__":
   opts, remainder = getopt.getopt(sys.argv[1:],"s:ahl:n:o:c:r:f:F:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft="])

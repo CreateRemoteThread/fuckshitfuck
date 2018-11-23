@@ -22,7 +22,7 @@ def usage():
   print " -f : savefile"
   print " -i : ip address of rigol scope (5555 must be open)"
 
-START_OFFSET = 1400000
+START_OFFSET = 0 # 1400000
 END_OFFSET = 1900000
 TRACE_COUNT = 5
 RAND_LEN = 16
@@ -41,7 +41,6 @@ if __name__ == "__main__":
       SAVEFILE = arg
     elif opt in ("-n","--samples"):
       NUM_SAMPLES = int(arg)
-      END_OFFSET = START_OFFSET + int(arg)
     elif opt in ("-c","--count"):
       TRACE_COUNT = int(arg)
     elif opt in ("-t","--test"):
@@ -49,7 +48,12 @@ if __name__ == "__main__":
     elif opt in ("-i","--ip"):
       IP_ADDR = arg
 
-NUM_SAMPLES = END_OFFSET - START_OFFSET
+if START_OFFSET == 0:
+  print "You MUST supply the -o (offset) argument for Rigol scopes"
+  sys.exit(0)
+
+END_OFFSET = START_OFFSET + NUM_SAMPLES
+# NUM_SAMPLES = END_OFFSET - START_OFFSET
 print "Sample count is %d" % NUM_SAMPLES
 
 try:
@@ -103,7 +107,7 @@ for i in range(0,TRACE_COUNT):
     plt.show()
     sys.exit(0)
   if len(ctx_out) != (RAND_LEN * 2) + 1:
-    os.sleep(3.0)
+    time.sleep(3.0)
     print "waiting for device stability..."
     continue
   print "%s:%s" % (binascii.hexlify(rand_input),ctx_out[1:])
