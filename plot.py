@@ -7,11 +7,34 @@ import binascii
 import random
 from scipy.signal import butter,lfilter,freqz
 from numpy import *
+import time
 import getopt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 TRIGGERS = 0
+
+lastTime = 0.0
+lastX = 0
+
+def onclick(event):
+  global lastTime, lastX
+  t = time.time()
+  if t - lastTime < 0.200:
+    print "debounce - nope"
+    return
+  else:
+    lastTime = t
+    if lastX == 0:
+      lastX = int(event.xdata)
+      print "MARK: %d" % lastX
+    else:
+      localX = int(event.xdata)
+      fromX = min(lastX,localX)
+      toX = max(lastX,localX)
+      dist = toX - fromX
+      print "FROM %d TO %d DIST %d" % (fromX,toX,dist)
+      lastX = localX
 
 def butter_lowpass(cutoff, fs, order=5):
   nyq = 0.5 * fs
@@ -98,6 +121,7 @@ def usage():
 
 mpl.rcParams['agg.path.chunksize'] = 10000 
 
+
 if __name__ == "__main__":
   opts, remainder = getopt.getopt(sys.argv[1:],"s:ahl:n:o:c:r:f:F:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft="])
   for opt,arg in opts:
@@ -128,6 +152,8 @@ if __name__ == "__main__":
   if [FFT_EN, LOWPASS_EN, AVG_EN, SPECGRAM_EN].count(True) > 1:
     print "You can only select one of -F (FFT), -l (LOWPASS) or -a (AVERAGE)"
     sys.exit(0)
+  if SPECGRAM_EN == False:
+    fig, ax1 = plt.subplots()
   for f in ADDITIONAL_FILES:
     df = load(f,mmap_mode = 'r')
     for i in range(0,NUM_TRACES):
@@ -182,4 +208,5 @@ if __name__ == "__main__":
     plt.ylabel(YAXIS)
     plt.xlabel(XAXIS)
     plt.grid()
+    fig.canvas.mpl_connect("button_press_event",onclick)
     plt.show()
