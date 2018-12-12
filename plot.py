@@ -23,6 +23,9 @@ def onclick(event):
   if t - lastTime < 0.200:
     print "debounce - nope"
     return
+  elif event.xdata is None:
+    print "skip - event.xdata (click on graph) is none"
+    return
   else:
     lastTime = t
     if lastX == 0:
@@ -182,6 +185,7 @@ if __name__ == "__main__":
         ax2.set_ylabel("Frequency Component")
         ax2.set_xlabel("Time")
         ax2.specgram(d,NFFT=1024,Fs=SPECGRAM_SR,noverlap=900)
+        fig.canvas.set_window_title("plot.py")
         plt.show()
         PLOT_SHOWN = True
       elif AVG_EN:
@@ -209,4 +213,5 @@ if __name__ == "__main__":
     plt.xlabel(XAXIS)
     plt.grid()
     fig.canvas.mpl_connect("button_press_event",onclick)
+    fig.canvas.set_window_title("plot.py")
     plt.show()
