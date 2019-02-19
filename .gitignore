@@ -10,6 +10,7 @@ set*/
 sampledata/
 
 **/*.npz
+*.npz
 
 # C extensions
 *.so

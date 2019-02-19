@@ -10,13 +10,13 @@ import serial
 import numpy as np
 
 SAMPLE_RATE = 64000000 
-NUM_SAMPLES = 50000
-NUM_CAPTURES = 1000
-# ANALOG_OFFSET = -0.1
-ANALOG_OFFSET = -0.006 # for ATMega test board
+NUM_SAMPLES = 200000
+NUM_CAPTURES = 1
+ANALOG_OFFSET = -0.09
+# ANALOG_OFFSET = -0.006 # for ATMega test board
 WRITE_FILE = None
-VRANGE_PRIMARY = 0.02 # for EM probe
-# VRANGE_PRIMARY = 0.1
+# VRANGE_PRIMARY = 0.02 # for EM probe
+VRANGE_PRIMARY = 0.05
 
 RAND_LEN = 16
 RAND_KEY = "e"
@@ -79,12 +79,13 @@ def usage():
   print " -c [tracecnt] : get this many traces"
   print " -o [offset] : set picoscope analog offset"
   print " -w [outfile] : save traces to this file"
-  print " -R : RSA mode (static short plaintext)"
+  print " -R : RSA ZERO KEY mode (static short plaintext)"
+  print " -0 : RSA NONZERO KEY mode (static short plaintext)"
   print ""
   print " if -c is 1, extra info will be printed"
 
 if __name__ == "__main__":
-  optlist, args = getopt.getopt(sys.argv[1:],"Rhr:n:c:o:w:",["RSA","help","samplerate=","samples=","count=","offset=","write_file="])
+  optlist, args = getopt.getopt(sys.argv[1:],"0Rhr:n:c:o:w:",["RSANONZERO","RSA","help","samplerate=","samples=","count=","offset=","write_file="])
   for arg,value in optlist:
     if arg in ("-h","--help"):
       usage()
@@ -92,6 +93,10 @@ if __name__ == "__main__":
     elif arg in ("-R","--RSA"):
       RAND_LEN = 8
       RAND_KEY = "r"
+      FIXED_PT = True
+    elif arg in ("-0","--RSANONZERO"):
+      RAND_LEN = 8
+      RAND_KEY = "R"
       FIXED_PT = True
     elif arg in ("-r","--samplerate"):
       SAMPLE_RATE = int(float(value))
