@@ -12,9 +12,9 @@ import numpy as np
 SAMPLE_RATE = 64000000 
 NUM_SAMPLES = 200000
 NUM_CAPTURES = 1
-ANALOG_OFFSET = -0.09
-# ANALOG_OFFSET = -0.006 # for ATMega test board
+ANALOG_OFFSET = -0.0875
 WRITE_FILE = None
+# ANALOG_OFFSET = -0.006 # for ATMega test board
 # VRANGE_PRIMARY = 0.02 # for EM probe
 VRANGE_PRIMARY = 0.05
 
@@ -79,8 +79,8 @@ def usage():
   print " -c [tracecnt] : get this many traces"
   print " -o [offset] : set picoscope analog offset"
   print " -w [outfile] : save traces to this file"
-  print " -R : RSA ZERO KEY mode (static short plaintext)"
-  print " -0 : RSA NONZERO KEY mode (static short plaintext)"
+  print " -0 : RSA ZERO KEY mode (static short plaintext)"
+  print " -R : RSA NONZERO KEY mode (static short plaintext)"
   print ""
   print " if -c is 1, extra info will be printed"
 
@@ -92,11 +92,11 @@ if __name__ == "__main__":
       sys.exit(0)
     elif arg in ("-R","--RSA"):
       RAND_LEN = 8
-      RAND_KEY = "r"
+      RAND_KEY = "R"
       FIXED_PT = True
     elif arg in ("-0","--RSANONZERO"):
       RAND_LEN = 8
-      RAND_KEY = "R"
+      RAND_KEY = "r"
       FIXED_PT = True
     elif arg in ("-r","--samplerate"):
       SAMPLE_RATE = int(float(value))
