@@ -6,20 +6,26 @@ from smartcard.CardConnectionObserver import ConsoleCardConnectionObserver
 from smartcard.Exceptions import CardRequestTimeoutException
 import getopt
 import sys
+import uuid
+from picoscope import ps2000a
+import random
+import numpy as np
+import matplotlib.pyplot as plt
 
 class SIMController:
   def __init__(self):
     self.c = None      # fuck pyscard. seriously.
     pass
 
-  def nextg_apdu(self):
+  def nextg_apdu(self,rand=None,autn=None,debug=False):
     self.cardrequest = CardRequest(timeout=5,cardType=AnyCardType())
     self.cardservice = self.cardrequest.waitforcard()
-    obs = ConsoleCardConnectionObserver()
-    self.cardservice.connection.addObserver(obs)
+    if debug:
+      obs = ConsoleCardConnectionObserver()
+      self.cardservice.connection.addObserver(obs)
     self.cardservice.connection.connect()
     self.c = self.cardservice.connection
-    print("ATR... : %s" % self.cardservice.connection.getATR())
+    # print("ATR... : %s" % self.cardservice.connection.getATR())
     r,sw1,sw2 = self.c.transmit([0x00, 0xa4, 0x08, 0x04, 0x02, 0x2f, 0x00])
     r,sw1,sw2 = self.c.transmit([0x00, 0xc0, 0x00, 0x00, 0x28])
     r,sw1,sw2 = self.c.transmit([0x00, 0xb2, 0x01, 0x04, 0x26])
@@ -28,7 +34,10 @@ class SIMController:
     r,sw1,sw2 = self.c.transmit([0x00, 0xa4, 0x00, 0x04, 0x02, 0x6f, 0x07])
     r,sw1,sw2 = self.c.transmit([0x00, 0xc0, 0x00, 0x00, 0x25])
     r,sw1,sw2 = self.c.transmit([0x00, 0xb0, 0x00, 0x00, 0x09])
-    authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + [0xaa] * 16 + [0x10] + [0xbb] * 16
+    if rand is None and autn is None:
+      authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + [0xaa] * 16 + [0x10] + [0xbb] * 16
+    else:
+      authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + rand + [0x10] + autn
     r,sw1,sw2 = self.c.transmit(authcmd)
 
   def fuzzFile(self,observer=False):
@@ -50,29 +59,58 @@ class SIMController:
     return out
 
 def usage():
-  print("USAGE TRIGGERED")
+  print("MILENAGE Power Trace Acquisition Utility")
+  print(" -h: show this message")
+  print(" -r: set sample rate (default 100MS)")
+  print(" -n: set number of samples (default 100,000)")
+  print(" -c: set number of traces (default 1000)")
+  print(" -o: set vertical offset (default: 0.0)")
+  print(" -w: set output file (default: [UUID].npz)")
   sys.exit(0)
 
+CONFIG_SAMPLERATE = 64000000
+CONFIG_SAMPLECOUNT = 100000
+CONFIG_TRACECOUNT = 1000
+CONFIG_ANALOGOFFSET = 0.0
+CONFIG_WRITEFILE = "%s.npz" % uuid.uuid4()
+
 if __name__ == "__main__":
-  if len(sys.argv) == 1:
-    sc = SIMController()
-    sc.nextg_apdu()
-    sys.exit(0)
-    a = [0x80, 0x10, 0x00, 0x00, 0x1e, 0x10, 0xf7, 0x1f, 0xec, 0xce, 0x1f, 0x9c, 0x00, 0x87, 0x94, 0x00, 0x00, 0x1f, 0xe2, 0x00, 0x00, 0x00, 0x43, 0xe0, 0x00, 0x03, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x91, 0x0f, 0x80, 0x12, 0x00, 0x00, 0x0f, 0x12, 0xd0, 0x0d, 0x81, 0x03, 0x01, 0x05, 0x00, 0x82, 0x02, 0x81, 0x82, 0x99, 0x02]
-    for i in range(7,len(a)):
-      try:
-        r,sw1,sw2 = sc.nextg_apdu(a[0:i])
-        print("Length %d, result %d:%d:%s" % (i,sw1,sw2,repr(r)))
-      except:
-        print("Length: %d, crash" % i)
-    # f = sc.fuzzFile(True)
-    # print(f)
-  else:
-    try:
-      opts, remainder = getopt.getopt(sys.argv[1:],"hm:",["help","mode="])
-    except:
-      print("Could not getopt.getopt")
+  optlist, args = getopt.getopt(sys.argv[1:],"hr:n:c:o:w:",["help","samplerate=","samples=","count=","offset=","write_file="])
+  for arg,value in optlist:
+    if arg in ("-h","--help"):
+      usage()
+    elif arg in ("-r","--samplerate"):
+      CONFIG_SAMPLERATE = int(value)
+    elif arg in ("-n","--samples"):
+      CONFIG_SAMPLECOUNT = int(value)
+    elif arg in ("-c","--count"):
+      CONFIG_TRACECOUNT = int(value)
+    elif arg in ("-o","--offset"):
+      CONFIG_ANALOGOFFSET = float(value)
+    elif arg in ("-w","--write_file"):
+      CONFIG_WRITEFILE = value
+    else:
+      print("Unknown argument: %s" % arg)
       sys.exit(0)
-    for opt, arg in opts:
-      if opt in ("-h","--help"):
-        usage()
+  print("-- Configuration Block --")
+  print("-- Sample Rate: %d" % CONFIG_SAMPLERATE)
+  print("-- Sample Count: %d" % CONFIG_SAMPLECOUNT)
+  print("-- Trace Count: %d" % CONFIG_TRACECOUNT)
+  print("-- Analog Offset: %f" % CONFIG_ANALOGOFFSET)
+  print("-- Write File: %s" % CONFIG_WRITEFILE)
+  x = input(" >>> CONFIRM Y/N <<< ")
+  if x.rstrip() not in ("Y","y"):
+    print("Declined by user. Exiting program now")
+    sys.exit(0)
+  sc = SIMController()
+  if CONFIG_TRACECOUNT == 1:
+    print("Capture single trace...") 
+    sys.exit(0)
+  for i in range(0,CONFIG_TRACECOUNT):
+    next_rand = [random.randint(0,255) for _ in range(16)]
+    next_autn = [random.randint(0,255) for _ in range(16)]
+    # print(len(next_rand))
+    str_rand = "".join(["%02x" % _ for _ in next_rand])
+    str_autn = "".join(["%02x" % _ for _ in next_autn])
+    print("%s:%s" % (str_rand,str_autn))
+    sc.nextg_apdu(next_rand,next_autn)
