@@ -10,7 +10,7 @@ import uuid
 from picoscope import ps2000a
 import random
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 class SIMController:
   def __init__(self):
@@ -99,17 +99,22 @@ if __name__ == "__main__":
   print("-- Analog Offset: %f" % CONFIG_ANALOGOFFSET)
   print("-- Write File: %s" % CONFIG_WRITEFILE)
   x = input(" >>> CONFIRM Y/N <<< ")
-  if x.rstrip() not in ("Y","y"):
+  if x.rstrip() not in ["Y","y"]:
     print("Declined by user. Exiting program now")
     sys.exit(0)
   sc = SIMController()
   if CONFIG_TRACECOUNT == 1:
     print("Capture single trace...") 
+    next_rand = [random.randint(0,255) for _ in range(16)]
+    next_autn = [random.randint(0,255) for _ in range(16)]
+    str_rand = "".join(["%02x" % _ for _ in next_rand])
+    str_autn = "".join(["%02x" % _ for _ in next_autn])
+    print("%s:%s" % (str_rand,str_autn))
+    sc.nextg_apdu(next_rand,next_autn)
     sys.exit(0)
   for i in range(0,CONFIG_TRACECOUNT):
     next_rand = [random.randint(0,255) for _ in range(16)]
     next_autn = [random.randint(0,255) for _ in range(16)]
-    # print(len(next_rand))
     str_rand = "".join(["%02x" % _ for _ in next_rand])
     str_autn = "".join(["%02x" % _ for _ in next_autn])
     print("%s:%s" % (str_rand,str_autn))
