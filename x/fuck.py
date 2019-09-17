@@ -17,6 +17,22 @@ class SIMController:
     self.c = None      # fuck pyscard. seriously.
     pass
 
+  def french_apdu(self):
+    self.cardrequest = CardRequest(timeout=5,cardType=AnyCardType())
+    self.cardservice = self.cardrequest.waitforcard()
+    obs = ConsoleCardConnectionObserver()
+    self.cardservice.connection.addObserver(obs)
+    self.cardservice.connection.connect()
+    self.c = self.cardservice.connection
+    print(" !!! USING SHORTER SSTIC2018 PAPER APDU SEQUENCE !!!")
+    r,sw1,sw2 = self.c.transmit([0x00, 0xa4, 0x08, 0x04, 0x02, 0x2f, 0x00])
+    r,sw1,sw2 = self.c.transmit([0x00,0xC0,0x00,0x00] + [sw2])
+    r,sw1,sw2 = self.c.transmit([0x00,0xB2,0x01,0x04] + [r[7]])
+    r,sw1,sw2 = self.c.transmit([0x00,0xA4,0x04,0x04] + list(r[3:4 + r[3]]))
+    r,sw1,sw2 = self.c.transmit([0x00,0xC0,0x01,0x04] + [sw2])
+    authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + [0xaa] * 16 + [0x10] + [0xbb] * 16
+    r,sw1,sw2 = self.c.transmit(authcmd)
+
   def nextg_apdu(self,rand=None,autn=None,debug=False):
     self.cardrequest = CardRequest(timeout=5,cardType=AnyCardType())
     self.cardservice = self.cardrequest.waitforcard()
@@ -110,7 +126,7 @@ if __name__ == "__main__":
     str_rand = "".join(["%02x" % _ for _ in next_rand])
     str_autn = "".join(["%02x" % _ for _ in next_autn])
     print("%s:%s" % (str_rand,str_autn))
-    sc.nextg_apdu(next_rand,next_autn)
+    sc.french_apdu()
     sys.exit(0)
   for i in range(0,CONFIG_TRACECOUNT):
     next_rand = [random.randint(0,255) for _ in range(16)]
