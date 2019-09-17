@@ -115,7 +115,7 @@ void setup()
   pinMode(PIN_CLK,OUTPUT);
   pinMode(PIN_DATA,OUTPUT);
   WiFi.softAPConfig(local_IP, gateway, subnet);
-  WiFi.softAP("FPGA Config.","FuckYouXilinx");
+  WiFi.softAP("FPGA Config.","TESTPASSWORDWHATEVER");
   WiFi.softAPIP();
   
   server.on("/", handleRoot);
