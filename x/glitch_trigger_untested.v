@@ -35,11 +35,15 @@ end
 
 reg [1:0] prog_state_io;
 reg [1:0] prog_state_clk;
+reg [8:0] prog_shift;
 
 always @(posedge prog_clk)
 begin
     if(prog_reset == 0)         // pulse with no prog_reset = select next parameter to program
     begin
+        CLK_EDGE_TARGET <= 13255;
+        IO_EDGE_TARGET <= 720;           
+        prog_shift <= 0;
         if(prog_io == 1)
         begin
             prog_state_io <= 1;
@@ -55,12 +59,13 @@ begin
     begin
         if(prog_state_io == 1)  // start shifting bits in
         begin
-            IO_EDGE_TARGET <= (IO_EDGE_TARGET << 1) + prog_io;
+            IO_EDGE_TARGET <= IO_EDGE_TARGET + (prog_io << prog_shift);
         end
         else if(prog_state_clk == 1)
         begin
-            CLK_EDGE_TARGET <= (CLK_EDGE_TARGET << 1) + prog_io;
+            CLK_EDGE_TARGET <= CLK_EDGE_TARGET + (prog_io << prog_shift);
         end
+        prog_shift <= prog_shift + 1;
     end
 end
 
