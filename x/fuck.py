@@ -10,7 +10,6 @@ import uuid
 from picoscope import ps2000a
 import random
 import numpy as np
-# import matplotlib.pyplot as plt
 
 class SIMController:
   def __init__(self):
@@ -25,7 +24,7 @@ class SIMController:
       self.cardservice.connection.addObserver(obs)
     self.cardservice.connection.connect()
     self.c = self.cardservice.connection
-    print(" !!! USING SHORTER SSTIC2018 PAPER APDU SEQUENCE !!!")
+    # print(" !!! USING SHORTER SSTIC2018 PAPER APDU SEQUENCE !!!")
     r,sw1,sw2 = self.c.transmit([0x00, 0xa4, 0x08, 0x04, 0x02, 0x2f, 0x00])
     r,sw1,sw2 = self.c.transmit([0x00,0xC0,0x00,0x00] + [sw2])
     r,sw1,sw2 = self.c.transmit([0x00,0xB2,0x01,0x04] + [r[7]])
@@ -93,6 +92,7 @@ CONFIG_SAMPLECOUNT = 100000
 CONFIG_TRACECOUNT = 1000
 CONFIG_ANALOGOFFSET = 0.0
 CONFIG_WRITEFILE = "%s.npz" % uuid.uuid4()
+VRANGE_PRIMARY = 0.02
 
 if __name__ == "__main__":
   optlist, args = getopt.getopt(sys.argv[1:],"hr:n:c:o:w:",["help","samplerate=","samples=","count=","offset=","write_file="])
@@ -124,7 +124,8 @@ if __name__ == "__main__":
     sys.exit(0)
   sc = SIMController()
   if CONFIG_TRACECOUNT == 1:
-    print("Capture single trace...") 
+    print(" >> YOU MUST MANUALLY CAPTURE ON YOUR SCOPE <<") 
+    print(" >> NO SCOPE AUTOMATION ON C = 1 <<") 
     next_rand = [random.randint(0,255) for _ in range(16)]
     next_autn = [random.randint(0,255) for _ in range(16)]
     str_rand = "".join(["%02x" % _ for _ in next_rand])
@@ -135,10 +136,29 @@ if __name__ == "__main__":
     sc.french_apdu(next_rand,next_autn)
     sys.exit(0)
   else:
+    print(" >> Initializing numpy bullshit")
+    traces = np.zeros((CONFIG_TRACECOUNT,CONFIG_SAMPLECOUNT),np.float32)
+    data = np.zeros((CONFIG_TRACECOUNT,16),np.uint8)         # RAND
+    data_out = np.zeros((CONFIG_TRACECOUNT,16),np.uint8)     # AUTN
+    print(" >> Initializing picoscope")
+    ps = ps2000a.PS2000a()
+    ps.setChannel('A','DC',VRange=VRANGE_PRIMARY,VOffset=CONFIG_ANALOGOFFSET,enabled=True,BWLimited=False)
+    ps.setChannel('B','DC',VRange=7.0,VOffset=0.0,enabled=True,BWLimited=False)
+    nSamples = CONFIG_SAMPLECOUNT
+    (freq,maxSamples) = ps.setSamplingFrequency(CONFIG_SAMPLERATE,nSamples)
+    print("Actual sampling frequency: %d Hz" % freq)
     for i in range(0,CONFIG_TRACECOUNT):
       next_rand = [random.randint(0,255) for _ in range(16)]
       next_autn = [random.randint(0,255) for _ in range(16)]
       str_rand = "".join(["%02x" % _ for _ in next_rand])
       str_autn = "".join(["%02x" % _ for _ in next_autn])
-      print("%s:%s" % (str_rand,str_autn))
-      sc.nextg_apdu(next_rand,next_autn)
+      print("[%06d] %s:%s" % (i,str_rand,str_autn))
+      ps.setSimpleTrigger('B',1.0,'Rising',timeout_ms=2000,enabled=True)
+      ps.runBlock()
+      sc.french_apdu(next_rand,next_autn)
+      ps.waitReady()
+      dataA = ps.getDataV('A',CONFIG_SAMPLECOUNT,returnOverflow=False)
+      traces[i:] = dataA
+      data[i:] = next_rand
+      data_out[i:] = next_autn
+    np.savez(CONFIG_WRITEFILE,traces=traces,data=data,data_out=data_out,freq=[freq])
