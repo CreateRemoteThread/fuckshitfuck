@@ -19,15 +19,15 @@ CONFIG_USE_LOWPASS = True
 
 # config of lowpass filter
 CONFIG_SAMPLERATE = 124999999
-CONFIG_CUTOFF=30000
-CONFIG_ORDER=3
+CONFIG_CUTOFF=60000
+CONFIG_ORDER=5
 CONFIG_REFTRACE = 0
 
 # how big is your window
 CONFIG_WINDOW_OFFSET = 10000
-CONFIG_WINDOW_SLIDE = 300
-CONFIG_WINDOW_LENGTH = 1000
-CONFIG_SAD_CUTOFF = 0.1
+CONFIG_WINDOW_LENGTH = 20000
+CONFIG_WINDOW_SLIDE = 8000
+CONFIG_SAD_CUTOFF = 3.2
 
 def getSingleSAD(array1,array2):
   totalSAD = 0.0
@@ -43,6 +43,12 @@ def getMinimalSAD(trace1,trace2):
     if ms < minimalSAD:
       minimalSAD = ms
       minimalSADIndex = i
+  for i in range(-CONFIG_WINDOW_SLIDE,0):
+    if CONFIG_WINDOW_OFFSET + i > 0:
+      ms = getSingleSAD(trace1[CONFIG_WINDOW_OFFSET + i:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH + i],trace2[CONFIG_WINDOW_OFFSET:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH])
+      if ms < minimalSAD:
+        minimalSAD = ms
+        minimalSADIndex = i
   return (minimalSADIndex,minimalSAD)
 
 def printConfig():
@@ -82,11 +88,14 @@ if __name__ == "__main__":
       r2 = x
     (msi,msv) = getMinimalSAD(r2,ref)
     if msv < CONFIG_SAD_CUTOFF:
-      print("Index %d, Minimal SAD Slide %d Samples, Minimal SAD Value %f" % (i,msi,msv))
-      traces[savedDataIndex,:] = roll(x,msi)      
-      data[savedDataIndex,:] = df['data'][i]
-      data_out[savedDataIndex,:] = df['data_out'][i]
-      savedDataIndex += 1
+      if msi == -CONFIG_WINDOW_SLIDE or msi == CONFIG_WINDOW_SLIDE - 1:
+        print("Index %d, discarding (edge MSI = not found)" % i)
+      else:
+        print("Index %d, Minimal SAD Slide %d Samples, Minimal SAD Value %f" % (i,msi,msv))
+        traces[savedDataIndex,:] = roll(x,msi)      
+        data[savedDataIndex,:] = df['data'][i]
+        data_out[savedDataIndex,:] = df['data_out'][i]
+        savedDataIndex += 1
     else:
       print("Index %d, discarding (MSV is %f)" % (i,msv))
   print("Saving %d records" % savedDataIndex)
