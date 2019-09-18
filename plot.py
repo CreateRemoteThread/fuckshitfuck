@@ -161,9 +161,9 @@ if __name__ == "__main__":
     df = load(f,mmap_mode = 'r')
     for i in range(0,NUM_TRACES):
       if OFFSET == 0 and COUNT == 0:
-        d = df['traces'][0]
+        d = df['traces'][i]
       else:
-        d = df['traces'][0][OFFSET:OFFSET + COUNT]
+        d = df['traces'][i][OFFSET:OFFSET + COUNT]
       if LOWPASS_EN:
         plt.plot(butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER))
       elif FFT_EN:
