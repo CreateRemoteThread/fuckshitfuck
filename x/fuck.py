@@ -133,7 +133,7 @@ if __name__ == "__main__":
     print("%s:%s" % (str_rand,str_autn))
     # /configure?io=412&clk=13255.
     # /configure?io=412&clk=170000 (for "close" to first round)
-    sc.french_apdu(next_rand,next_autn)
+    sc.french_apdu(next_rand,next_autn,debug=True)
     sys.exit(0)
   else:
     print(" >> Initializing numpy bullshit")
