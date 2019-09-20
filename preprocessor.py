@@ -2,6 +2,7 @@
 
 from scipy.signal import butter,lfilter,freqz
 from numpy import *
+import getopt
 import sys
 
 def butter_lowpass(cutoff, fs, order=5):
@@ -15,25 +16,28 @@ def butter_lowpass_filter(data, cutoff, fs, order=5):
   y = lfilter(b, a, data)
   return y
 
-CONFIG_USE_LOWPASS = False
+CONFIG_USE_LOWPASS = True
 
 # config of lowpass filter
 CONFIG_SAMPLERATE = 124999999
 CONFIG_CUTOFF=60000
-CONFIG_ORDER=5
+CONFIG_ORDER=1
 CONFIG_REFTRACE = 0
 
 # how big is your window
-CONFIG_WINDOW_OFFSET = 10000
-CONFIG_WINDOW_LENGTH = 5000
-CONFIG_WINDOW_SLIDE = 4000
+CONFIG_WINDOW_OFFSET = 40575
+CONFIG_WINDOW_LENGTH = 10000
+CONFIG_WINDOW_SLIDE = 5000
 CONFIG_SAD_CUTOFF = 3.2
-CONFIG_MCF_CUTOFF = 0.3
+CONFIG_MCF_CUTOFF = 0.6
 
 USE_MAXCORR = 1
 USE_MINSAD = 2
 
 CONFIG_STRATEGY = USE_MAXCORR
+
+CONFIG_INFILE = None
+CONFIG_OUTFILE = None
 
 def getSingleSAD(array1,array2):
   totalSAD = 0.0
@@ -79,24 +83,87 @@ def getMinimalSAD(trace1,trace2):
         minimalSADIndex = i
   return (minimalSADIndex,minimalSAD)
 
+def printHelp():
+  print("Preprocessor utility.")
+  print(" -h : print this message")
+  print(" -f <file> : specify input file")
+  print(" -w <file> : specify output file")
+  print(" -strategy [CORRCOEFF,SAD] : specify preprocess strategy")
+  print(" -c <cutoff> : specify max SAD cutoff OR min correlation coeff cutoff")
+  print("             : everything not matching this is discarded!!!!")
+  print(" -l <cutoff,samplerate,order> : lowpass before preprocessing")
+  print(" --window-offset <offset> : offset of window to match in samples")
+  print(" --window-length <length> : length of window to match in samples")
+  print(" --window-slide <maxslide> : max num of samples to slide the window to search for a match")
+  print("                           : this is effectively doubled for sliding backwards")
+  print(" -r <reftrace> : specify index of reference trace")
+
 def printConfig():
-  print("Lowpass configuration:")
-  print("Cutoff = %d Hz" % CONFIG_CUTOFF)
-  print("Samplerate = %d Hz" % CONFIG_SAMPLERATE)
-  print("Order = %d" % CONFIG_ORDER)
-  print("Sliding Window configuration:")
-  print("Window offset: %d samples" % CONFIG_WINDOW_OFFSET)
-  print("Max slide = %d samples" % CONFIG_WINDOW_SLIDE)
-  print("Window length = %d samples" % CONFIG_WINDOW_LENGTH)
+  print("-----------------------------------------------------")
+  print(" Preprocessor Configuration:")
+  print(" Input file = %s" % CONFIG_INFILE)
+  print(" Output file = %s" % CONFIG_OUTFILE)
+  if CONFIG_STRATEGY == USE_MAXCORR:
+    print(" Strategy: Maximize correlation coefficient")
+  else:
+    print(" Strategy: Minimize Sum of Absolute Difference")
+  if CONFIG_USE_LOWPASS:
+    print(" Use Lowpass: yes")
+    print("   Lowpass Sample Rate: %d Hz" % CONFIG_SAMPLERATE)
+    print("   Lowpass Cutoff: %d Hz" % CONFIG_CUTOFF)
+    print("   Lowpass Order: %d" % CONFIG_ORDER)
+  else:
+    print(" Use Lowpass: no")
+  print(" Window configuration:")
+  print("   Window offset: %d samples" % CONFIG_WINDOW_OFFSET)
+  print("   Max slide = %d samples" % CONFIG_WINDOW_SLIDE)
+  print("   Window length = %d samples" % CONFIG_WINDOW_LENGTH)
+  print("-----------------------------------------------------")
 
 if __name__ == "__main__":
-  if len(sys.argv) != 3:
-    print("Lowpass>MinSAD Pre-processor Utility")
-    print("Usage: ./sad-preprocessor.py [in.npz] [out.npz]")
+  optlist,args = getopt.getopt(sys.argv[1:],"hf:w:l:r:c:",["help","strategy=","lowpass=","reftrace=","window-offset=","window-length=","window-slide=","cutoff="])
+  for arg, value in optlist:
+    if arg == "-f":
+      CONFIG_INFILE = value
+    elif arg == "-w":
+      CONFIG_OUTFILE = value
+    elif arg in ("-h","--help"):
+      printHelp()
+    elif arg == "--strategy":
+      if value.upper() in ("CORRCOEF","CORRCOEFF"):
+        CONFIG_STRATEGY = USE_MAXCORR
+      elif value.upper() in ("SAD","SADNESS"):
+        CONFIG_STRATEGY = USE_MINSAD
+      else:
+        print("Invalid preprocessing strategy. Valid options are CORRCOEF,SAD")
+        sys.exit(0)
+    elif arg in ("-l","--lowpass"):
+      try:
+        (str_cutoff,str_samplerate,str_order) = value.split(",")
+        CONFIG_USE_LOWPASS = True
+        CONFIG_CUTOFF = int(str_cutoff)
+        CONFIG_SAMPLERATE = int(str_samplerate)
+        CONFIG_ORDER = int(str_order)
+      except:
+        print("Invalid lowpass filter. Specify as CUTOFF,SAMPLERATE,ORDER")
+        sys.exit(0)
+    elif arg in ("-r","--reftrace"):
+      CONFIG_REFTRACE = int(value)
+    elif arg == "--window-length":
+      CONFIG_WINDOW_LENGTH = int(value)
+    elif arg == "--window-offset":
+      CONFIG_WINDOW_OFFSET = int(value)
+    elif arg == "--window-slide":
+      CONFIG_WINDOW_SLIDE = int(value)
+    elif arg in ("-c","--cutoff"):
+      CONFIG_SAD_CUTOFF = float(value)
+      CONFIG_MCF_CUTOFF = float(value)
+  if CONFIG_INFILE is None or CONFIG_OUTFILE is None:
+    print("You must specify input (-f) and output files (-w)")
     sys.exit(0)
   printConfig()
   savedDataIndex = 0
-  df = load(sys.argv[1],mmap_mode='r')
+  df = load(CONFIG_INFILE,mmap_mode='r')
   if CONFIG_USE_LOWPASS:
     ref = butter_lowpass_filter(df['traces'][CONFIG_REFTRACE],CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
   else:
@@ -149,4 +216,4 @@ if __name__ == "__main__":
       else:
         print("Index %d, discarding (MSV is %f, index is %d)" % (i,msv,msi))
   print("Saving %d records" % savedDataIndex)
-  savez(sys.argv[2],traces=traces[0:savedDataIndex],data=data[0:savedDataIndex],data_out=data_out[0:savedDataIndex],freq=df['freq'])
+  savez(CONFIG_OUTFILE,traces=traces[0:savedDataIndex],data=data[0:savedDataIndex],data_out=data_out[0:savedDataIndex],freq=df['freq'])
