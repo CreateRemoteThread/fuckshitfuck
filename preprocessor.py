@@ -189,7 +189,7 @@ if __name__ == "__main__":
           print("Index %d, discarding (edge MSI = not found)" % i)
         else:
           print("Index %d, Minimal SAD Slide %d Samples, Minimal SAD Value %f" % (i,msi,msv))
-          traces[savedDataIndex,:] = roll(x,msi)      
+          traces[savedDataIndex,:] = roll(x,-msi)      
           data[savedDataIndex,:] = df['data'][i]
           data_out[savedDataIndex,:] = df['data_out'][i]
           savedDataIndex += 1
@@ -209,11 +209,11 @@ if __name__ == "__main__":
           print("Index %d, discarding (edge Max Coeff Index = not found, mcf is %f)" % (i,msv))
         else:
           print("Index %d, Max Corr Coeff Slide %d Samples, Max CF Value %f" % (i,msi,msv))
-          traces[savedDataIndex,:] = roll(x,msi)
+          traces[savedDataIndex,:] = roll(x,-msi)
           data[savedDataIndex,:] = df['data'][i]
           data_out[savedDataIndex,:] = df['data_out'][i]
           savedDataIndex += 1
       else:
-        print("Index %d, discarding (MSV is %f, index is %d)" % (i,msv,msi))
+        print("Index %d, discarding (correlation is %f, index is %d)" % (i,msv,msi))
   print("Saving %d records" % savedDataIndex)
   savez(CONFIG_OUTFILE,traces=traces[0:savedDataIndex],data=data[0:savedDataIndex],data_out=data_out[0:savedDataIndex],freq=df['freq'])
