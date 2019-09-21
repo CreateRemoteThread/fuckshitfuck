@@ -50,10 +50,25 @@ def butter_lowpass_filter(data, cutoff, fs, order=5):
   y = lfilter(b, a, data)
   return y
 
+def getTraceConfig(r_str):
+  r = []
+  if "," in r_str:
+    tokens = r_str.split(",")
+  else:
+    tokens = [r_str]
+  for t in tokens:
+    if "-" in r_str:
+      (t1,t2) = r_str.split("-")
+      r += range(int(t1),int(t2))
+    else:
+      r += [int(r_str)]
+  return r
+
 OFFSET = 0
 COUNT = 0
 RULER = []
-NUM_TRACES = 1
+# NUM_TRACES = 1
+TRACES = []
 GAIN_FACTOR =  31622.0
 ADDITIONAL_FILES = []
 
@@ -114,7 +129,7 @@ def usage():
   print " -h : prints this message"
   print " -o : offset to start plotting samples from"
   print " -n : number of samples from offset to plot"
-  print " -c : number of traces to plot"
+  print " -c : select traces"
   print " -f : input npz file (can be multiple)"
   print " -r : print vertical ruler at point (NOT IMPLEMENTED)"
   print " -l [cutoff,samplerate,order] : lowpass mode - units in hz"
@@ -123,7 +138,6 @@ def usage():
   print " -s [samplerate] : plot spectrogram"
 
 mpl.rcParams['agg.path.chunksize'] = 10000 
-
 
 if __name__ == "__main__":
   opts, remainder = getopt.getopt(sys.argv[1:],"s:ahl:n:o:c:r:f:F:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft="])
@@ -140,7 +154,7 @@ if __name__ == "__main__":
     elif opt in ("-n","--samples"):
       COUNT = int(float(arg))
     elif opt in ("-c","--count"):
-      NUM_TRACES = int(arg)
+      TRACES = getTraceConfig(arg)
     elif opt in ("-f","--file"):
       ADDITIONAL_FILES.append(arg)
     elif opt in ("-l","--lowpass"):
@@ -159,7 +173,7 @@ if __name__ == "__main__":
     fig, ax1 = plt.subplots()
   for f in ADDITIONAL_FILES:
     df = load(f,mmap_mode = 'r')
-    for i in range(0,NUM_TRACES):
+    for i in TRACES:
       if OFFSET == 0 and COUNT == 0:
         d = df['traces'][i]
       else:
