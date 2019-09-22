@@ -54,14 +54,15 @@ def getTraceConfig(r_str):
   r = []
   if "," in r_str:
     tokens = r_str.split(",")
+    print tokens
   else:
     tokens = [r_str]
   for t in tokens:
-    if "-" in r_str:
-      (t1,t2) = r_str.split("-")
+    if "-" in t:
+      (t1,t2) = t.split("-")
       r += range(int(t1),int(t2))
     else:
-      r += [int(r_str)]
+      r += [int(t)]
   return r
 
 OFFSET = 0
@@ -140,7 +141,7 @@ def usage():
 mpl.rcParams['agg.path.chunksize'] = 10000 
 
 if __name__ == "__main__":
-  opts, remainder = getopt.getopt(sys.argv[1:],"s:ahl:n:o:c:r:f:F:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft="])
+  opts, remainder = getopt.getopt(sys.argv[1:],"s:ahl:n:o:c:r:f:F:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft=","highlight="])
   for opt,arg in opts:
     if opt in ("-h","--help"):
       usage()
