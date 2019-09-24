@@ -20,4 +20,4 @@ This toolkit comprises:
 
 Some test targets are provided in target/ and pictarget-3.X/
 
-The code is provided as-is, pull requests and bug requests are welcome.
+The code is provided as-is, pull requests and feature requests are welcome.
