@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import numpy as np
 from scipy.signal import butter, lfilter, freqz
@@ -50,7 +50,7 @@ def deriveKey(data,plaintexts):
   for bnum in range(0,MAX_BYTES):
     cpaoutput = [0]  * 256
     maxcpa = [0] * 256
-    print "Correlating hypotheses for byte %d" % bnum
+    print(("Correlating hypotheses for byte %d" % bnum))
     for kguess in range(0,256):
       sumnum = np.zeros(TRACE_LENGTH)
       sumden1 = np.zeros(TRACE_LENGTH)
@@ -77,21 +77,21 @@ def deriveKey(data,plaintexts):
       maxcpa[kguess] = max(abs(cpaoutput[kguess]))
     # print maxcpa
     # print maxcpa[np.argmax(maxcpa)]
-    plt.plot(range(0,256),maxcpa)
+    plt.plot(list(range(0,256)),maxcpa)
     bestguess[bnum] = np.argmax(maxcpa)
     sortedcpa = np.argsort(maxcpa)[::-1]
-    print "Selected: %02x; CPA: %f, %f, %f" % (bestguess[bnum], maxcpa[bestguess[bnum]], maxcpa[sortedcpa[1]],maxcpa[sortedcpa[2]])
+    print(("Selected: %02x; CPA: %f, %f, %f" % (bestguess[bnum], maxcpa[bestguess[bnum]], maxcpa[sortedcpa[1]],maxcpa[sortedcpa[2]])))
   return bestguess
 
 fn = None
 
 def usage():
-  print " cpa.py : part of the fuckshitfuck toolkit"
-  print "----------------------------------------------"
-  print " -h : prints this message"
-  print " -o : offset to start correlating from"
-  print " -n : number of samples per trace"
-  print " -f : trace file (.npz from grab3.py)"
+  print(" cpa.py : part of the fuckshitfuck toolkit")
+  print("----------------------------------------------")
+  print(" -h : prints this message")
+  print(" -o : offset to start correlating from")
+  print(" -n : number of samples per trace")
+  print(" -f : trace file (.npz from grab3.py)")
 
 if __name__ == "__main__":
   opts, remainder = getopt.getopt(sys.argv[1:],"ho:n:f:c:",["help","offset=","samples=","file=","count="])
@@ -105,17 +105,17 @@ if __name__ == "__main__":
       TRACE_LENGTH = int(arg)
     elif opt in ("-c","--count"):
       TRACE_MAX = int(arg)
-      print "OVERRIDING trace_count to %d" % TRACE_MAX
+      print(("OVERRIDING trace_count to %d" % TRACE_MAX))
     elif opt in ("-f","--file"):
       fn = arg
-  print "TRACE_OFFSET = %d" % TRACE_OFFSET
-  print "TRACE_LENGTH = %d" % TRACE_LENGTH
+  print(("TRACE_OFFSET = %d" % TRACE_OFFSET))
+  print(("TRACE_LENGTH = %d" % TRACE_LENGTH))
   if fn is None:
-    print "You must specify a file with -f"
+    print("You must specify a file with -f")
     sys.exit(0)
-  print "Stage 1: Loading plaintexts..."
+  print("Stage 1: Loading plaintexts...")
   data,plaintexts = loadTraces(fn)
-  print "Stage 2: Deriving key... wish me luck!"
+  print("Stage 2: Deriving key... wish me luck!")
   r = deriveKey(data,plaintexts)
   plt.title("AES SubKey Correlation Overview")
   plt.ylabel("Correlation")
@@ -124,11 +124,11 @@ if __name__ == "__main__":
   out = ""
   for i in range(0,16):
     out += "%02x " % int(r[i])
-  print "Done: %s" % out
+  print(("Done: %s" % out))
   out = ""
   actualKey = [0x2b,0x7e,0x15,0x16,0x28,0xae,0xd2,0xa6,0xab,0xf7,0x15,0x88,0x09,0xcf,0x4f,0x3c]
   out = ""
   for i in range(0,16):
     out += "%02x " % int(actualKey[i])
-  print "Done: %s" % out
+  print(("Done: %s" % out))
   out = ""

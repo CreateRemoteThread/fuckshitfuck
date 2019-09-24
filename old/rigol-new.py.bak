@@ -13,14 +13,14 @@ import matplotlib.pyplot as plt
 IP_ADDR = "10.10.10.4"
 
 def usage():
-  print(" rigol-new.py, part of the fuckshitfuck toolkit")
-  print("------------------------------------------------")
-  print(" -h : prints this message")
-  print(" -o : offset to fetch from (halfway on 2ch is at 1500000)")
-  print(" -n : number of samples per trace")
-  print(" -c : number of traces to fetch")
-  print(" -f : savefile")
-  print(" -i : ip address of rigol scope (5555 must be open)")
+  print " rigol-new.py, part of the fuckshitfuck toolkit"
+  print "------------------------------------------------"
+  print " -h : prints this message"
+  print " -o : offset to fetch from (halfway on 2ch is at 1500000)"
+  print " -n : number of samples per trace"
+  print " -c : number of traces to fetch"
+  print " -f : savefile"
+  print " -i : ip address of rigol scope (5555 must be open)"
 
 START_OFFSET = 0 # 1400000
 END_OFFSET = 1900000
@@ -49,17 +49,17 @@ if __name__ == "__main__":
       IP_ADDR = arg
 
 if START_OFFSET == 0:
-  print("You MUST supply the -o (offset) argument for Rigol scopes")
+  print "You MUST supply the -o (offset) argument for Rigol scopes"
   sys.exit(0)
 
 END_OFFSET = START_OFFSET + NUM_SAMPLES
 # NUM_SAMPLES = END_OFFSET - START_OFFSET
-print("Sample count is %d" % NUM_SAMPLES)
+print "Sample count is %d" % NUM_SAMPLES
 
 try:
   scope = DS1054Z(IP_ADDR)
 except:
-  print("Could not connect to %s, can you netcat to 5555?" % IP_ADDR)
+  print "Could not connect to %s, can you netcat to 5555?" % IP_ADDR
 scope.write(":STOP")
 
 # atmega test
@@ -69,7 +69,7 @@ scope.write(":STOP")
 scope.write(":CHAN1:SCAL 0.020")
 scope.write(":CHAN1:OFFS -0.055")
 
-print("Scale: {0}V".format(DS1054Z.format_si_prefix(scope.get_channel_scale(1))))
+print "Scale: {0}V".format(DS1054Z.format_si_prefix(scope.get_channel_scale(1)))
 
 scope.write(":CHAN2:SCAL 5.0")
 scope.write(":CHAN2:OFFS 0.0")
@@ -94,23 +94,23 @@ for i in range(0,TRACE_COUNT):
   time.sleep(0.5)
   datax = scope.get_waveform_samples("CHAN1",mode="RAW",start=START_OFFSET+1,end=END_OFFSET)
   if TEST_MODE is True:
-    print("Test mode, counting useful cycles...")
+    print "Test mode, counting useful cycles..."
     data_trigger = scope.get_waveform_samples("CHAN2",mode="RAW",start=START_OFFSET+1,end=END_OFFSET)
     first_useful = next(x[0] for x in enumerate(data_trigger) if x[1] > 1.0)
     last_useful = next(x[0] for x in enumerate(data_trigger[first_useful:]) if x[1] < 1.0)
-    print("Start Capture: (-o) %d" % START_OFFSET)
-    print("Num Samples: (-n) %d" % (END_OFFSET - START_OFFSET))
-    print("First useful: %d" % first_useful)
-    print("Last useful: %d" % last_useful)
-    print(data_trigger[0:50])
+    print "Start Capture: (-o) %d" % START_OFFSET
+    print "Num Samples: (-n) %d" % (END_OFFSET - START_OFFSET)
+    print "First useful: %d" % first_useful
+    print "Last useful: %d" % last_useful
+    print data_trigger[0:50]
     plt.plot(data_trigger)
     plt.show()
     sys.exit(0)
   if len(ctx_out) != (RAND_LEN * 2) + 1:
     time.sleep(3.0)
-    print("waiting for device stability...")
+    print "waiting for device stability..."
     continue
-  print("%s:%s" % (binascii.hexlify(rand_input),ctx_out[1:]))
+  print "%s:%s" % (binascii.hexlify(rand_input),ctx_out[1:])
   # print "SAVING TRACE"
   traces[i,:] = [np.float32(d) for d in datax]
   data[i,:] = [ord(x) for x in rand_input]

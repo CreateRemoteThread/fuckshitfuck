@@ -21,22 +21,22 @@ def onclick(event):
   global lastTime, lastX
   t = time.time()
   if t - lastTime < 0.200:
-    print("debounce - nope")
+    print "debounce - nope"
     return
   elif event.xdata is None:
-    print("skip - event.xdata (click on graph) is none")
+    print "skip - event.xdata (click on graph) is none"
     return
   else:
     lastTime = t
     if lastX == 0:
       lastX = int(event.xdata)
-      print("MARK: %d" % lastX)
+      print "MARK: %d" % lastX
     else:
       localX = int(event.xdata)
       fromX = min(lastX,localX)
       toX = max(lastX,localX)
       dist = toX - fromX
-      print("FROM %d TO %d DIST %d" % (fromX,toX,dist))
+      print "FROM %d TO %d DIST %d" % (fromX,toX,dist)
       lastX = localX
 
 def butter_lowpass(cutoff, fs, order=5):
@@ -54,13 +54,13 @@ def getTraceConfig(r_str):
   r = []
   if "," in r_str:
     tokens = r_str.split(",")
-    print(tokens)
+    print tokens
   else:
     tokens = [r_str]
   for t in tokens:
     if "-" in t:
       (t1,t2) = t.split("-")
-      r += list(range(int(t1),int(t2)))
+      r += range(int(t1),int(t2))
     else:
       r += [int(t)]
   return r
@@ -116,7 +116,7 @@ def configure_lowpass(in_str):
   try:
     (cutoff,samplerate,order) = in_str.split(",")
   except:
-    print("syntax: -l 10000,40000000,5 (cutoff, samplerate, order)")
+    print "syntax: -l 10000,40000000,5 (cutoff, samplerate, order)"
     sys.exit(0)
   LOWPASS_CUTOFF = float(cutoff)
   LOWPASS_SR = float(samplerate)
@@ -125,18 +125,18 @@ def configure_lowpass(in_str):
   TITLE = "Low Pass (%d Hz SR, %d Hz Cutoff)" % (LOWPASS_SR,LOWPASS_CUTOFF)
 
 def usage():
-  print(" plot.py : part of the fuckshitfuck toolkit")
-  print("----------------------------------------------")
-  print(" -h : prints this message")
-  print(" -o : offset to start plotting samples from")
-  print(" -n : number of samples from offset to plot")
-  print(" -c : select traces")
-  print(" -f : input npz file (can be multiple)")
-  print(" -r : print vertical ruler at point (NOT IMPLEMENTED)")
-  print(" -l [cutoff,samplerate,order] : lowpass mode - units in hz")
-  print(" -F [samplerate] : plot fft, base freq in hz")
-  print(" -a : plot average trace")
-  print(" -s [samplerate] : plot spectrogram")
+  print " plot.py : part of the fuckshitfuck toolkit"
+  print "----------------------------------------------"
+  print " -h : prints this message"
+  print " -o : offset to start plotting samples from"
+  print " -n : number of samples from offset to plot"
+  print " -c : select traces"
+  print " -f : input npz file (can be multiple)"
+  print " -r : print vertical ruler at point (NOT IMPLEMENTED)"
+  print " -l [cutoff,samplerate,order] : lowpass mode - units in hz"
+  print " -F [samplerate] : plot fft, base freq in hz"
+  print " -a : plot average trace"
+  print " -s [samplerate] : plot spectrogram"
 
 mpl.rcParams['agg.path.chunksize'] = 10000 
 
@@ -165,10 +165,10 @@ if __name__ == "__main__":
     elif opt in ("-r","--ruler"):
       RULER.append(int(float(arg)))
     else:
-      print("Unknown argument: %s" % opt)
+      print "Unknown argument: %s" % opt
       sys.exit(0) 
   if [FFT_EN, LOWPASS_EN, AVG_EN, SPECGRAM_EN].count(True) > 1:
-    print("You can only select one of -F (FFT), -l (LOWPASS) or -a (AVERAGE)")
+    print "You can only select one of -F (FFT), -l (LOWPASS) or -a (AVERAGE)"
     sys.exit(0)
   if SPECGRAM_EN == False:
     fig, ax1 = plt.subplots()
@@ -186,9 +186,9 @@ if __name__ == "__main__":
         k = arange(n)
         T = n / FFT_BASEFREQ
         frq = k / T
-        frq = frq[list(range(n/2))]
+        frq = frq[range(n/2)]
         Y = fft.fft(d)/n
-        Y = Y[list(range(n/2))]
+        Y = Y[range(n/2)]
         plt.plot(frq,abs(Y),'r') 
       elif SPECGRAM_EN:
         fig, (ax1, ax2) = plt.subplots(nrows=2)

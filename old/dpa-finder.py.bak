@@ -46,11 +46,11 @@ def deriveKey(data,plaintexts):
   global TRACE_OFFSET,TRACE_LENGTH
   if TRACE_LENGTH == 0:
     TRACE_LENGTH = data[0].size
-  print("DERIVING FOR TRACE LENGTH %d" % TRACE_LENGTH)
+  print "DERIVING FOR TRACE LENGTH %d" % TRACE_LENGTH
   for BYTE_POSN in range(0,16):
     globalMax = zeros(TRACE_LENGTH)
     maxDiff = 0.0
-    print("Attempting recovery of byte %d..." % BYTE_POSN)
+    print "Attempting recovery of byte %d..." % BYTE_POSN
     for KEY_GUESS in range(0,256):
       diffProfile = zeros(TRACE_LENGTH)
       numGroup1 = 0
@@ -83,19 +83,19 @@ def deriveKey(data,plaintexts):
       # if difftest >= x_avg:
       gm[i_m] = abs(globalMax[i_m] - x_avg)
       # plt.annotate_
-      print("Assigning value %f to %d" % (abs(globalMax[i_m] - x_avg), i_m))
-    print("Average for round: %f" % x_avg)
-    plt.plot(list(range(0,TRACE_LENGTH)),gm)
+      print "Assigning value %f to %d" % (abs(globalMax[i_m] - x_avg), i_m)
+    print "Average for round: %f" % x_avg
+    plt.plot(range(0,TRACE_LENGTH),gm)
 
 fn = None
 
 def usage():
-  print(" dpa-finder.py : part of the fuckshitfuck toolkit")
-  print("---------------------------------------------------")
-  print(" -h : prints this message")
-  print(" -o : set offset from zero")
-  print(" -n : set length of useful traces")
-  print(" -f : trace file (.npz from grab3.py)")
+  print " dpa-finder.py : part of the fuckshitfuck toolkit"
+  print "---------------------------------------------------"
+  print " -h : prints this message"
+  print " -o : set offset from zero"
+  print " -n : set length of useful traces"
+  print " -f : trace file (.npz from grab3.py)"
 
 if __name__ == "__main__":
   opts, remainder = getopt.getopt(sys.argv[1:],"hf:o:n:",["help","file=","offset=","samples="])
@@ -110,11 +110,11 @@ if __name__ == "__main__":
     elif opt in ("-f","--file"):
       fn = arg
   if fn is None:
-    print("You must specify a file with -f")
+    print "You must specify a file with -f"
     sys.exit(0)
-  print("Stage 1: Loading plaintexts...")
+  print "Stage 1: Loading plaintexts..."
   data,plaintexts = loadTraces(fn)
-  print("Finding maximum difference points...")
+  print "Finding maximum difference points..."
   deriveKey(data,plaintexts)
   plt.title("Seek Maximum Power Leakage (AES Hypothesis)")
   plt.ylabel("Maximum Diff. of Means")

@@ -51,9 +51,9 @@ def encryptAndTrace_2CH(ps,in_string,cnt):
       countUseful += 1
     elif firstUseful > 0:
       FIRST_USEFUL = 0
-  print("%d : %s:%s (approximately %d useful, %d in first useful block)" % (cnt,in_string.rstrip(),decrypt_text,countUseful,firstUseful))
+  print "%d : %s:%s (approximately %d useful, %d in first useful block)" % (cnt,in_string.rstrip(),decrypt_text,countUseful,firstUseful)
   if decrypt_text[0] != 'e':
-    print("device restarted, waitng for stability")
+    print "device restarted, waitng for stability"
     ser.close()
     time.sleep(5.0)
     ser = serial.Serial('/dev/ttyUSB0',9600)
@@ -67,27 +67,27 @@ def encryptAndTrace(ps,in_string,cnt):
   ps.waitReady()
   decrypt_text = ser.readline().rstrip()
   dataA = ps.getDataV('A',nSamples,returnOverflow=False)
-  print("%d : %s:%s" % (cnt,in_string.rstrip(),decrypt_text))
+  print "%d : %s:%s" % (cnt,in_string.rstrip(),decrypt_text)
   if decrypt_text[0] != 'e' or len(decrypt_text) != (1 + RAND_LEN * 2):
-    print("device restarted, waitng for stability")
+    print "device restarted, waitng for stability"
     ser.close()
     time.sleep(10.0)
     ser = serial.Serial('/dev/ttyUSB0',9600)
   return (dataA,fix_out(decrypt_text))
 
 def usage():
-  print(" grab3.py : part of the fuckshitfuck toolkit")
-  print("----------------------------------------------")
-  print(" -h : prints this message")
-  print(" -r [samplerate] : set samplerate in hz")
-  print(" -n [samplecnt] : get this many samples per trace")
-  print(" -c [tracecnt] : get this many traces")
-  print(" -o [offset] : set picoscope analog offset")
-  print(" -w [outfile] : save traces to this file")
-  print(" -0 : RSA ZERO KEY mode (static short plaintext)")
-  print(" -R : RSA NONZERO KEY mode (static short plaintext)")
-  print("")
-  print(" if -c is 1, extra info will be printed")
+  print " grab3.py : part of the fuckshitfuck toolkit"
+  print "----------------------------------------------"
+  print " -h : prints this message"
+  print " -r [samplerate] : set samplerate in hz"
+  print " -n [samplecnt] : get this many samples per trace"
+  print " -c [tracecnt] : get this many traces"
+  print " -o [offset] : set picoscope analog offset"
+  print " -w [outfile] : save traces to this file"
+  print " -0 : RSA ZERO KEY mode (static short plaintext)"
+  print " -R : RSA NONZERO KEY mode (static short plaintext)"
+  print ""
+  print " if -c is 1, extra info will be printed"
 
 if __name__ == "__main__":
   optlist, args = getopt.getopt(sys.argv[1:],"0Rhr:n:c:o:w:",["RSANONZERO","RSA","help","samplerate=","samples=","count=","offset=","write_file="])
@@ -114,20 +114,20 @@ if __name__ == "__main__":
     elif arg in ("-w","--write_file"):
       WRITE_FILE = value
   if WRITE_FILE is None and NUM_CAPTURES != 1:
-    print("FATAL, you MUST specify an output file via -w")
+    print "FATAL, you MUST specify an output file via -w"
     sys.exit(0)
-  print("WRITE_FILE = %s" % WRITE_FILE)
-  print("SAMPLE_RATE = %d" % SAMPLE_RATE)
-  print("NUM_SAMPLES = %d" % NUM_SAMPLES)
-  print("NUM_CAPTURES = %d" % NUM_CAPTURES)
-  print("ANALOG_OFFSET = %f" % ANALOG_OFFSET)
+  print "WRITE_FILE = %s" % WRITE_FILE
+  print "SAMPLE_RATE = %d" % SAMPLE_RATE
+  print "NUM_SAMPLES = %d" % NUM_SAMPLES
+  print "NUM_CAPTURES = %d" % NUM_CAPTURES
+  print "ANALOG_OFFSET = %f" % ANALOG_OFFSET
   ps = ps2000a.PS2000a()
   # use the finest resolution v-offset you cna.
   ps.setChannel('A','DC',VRange=VRANGE_PRIMARY,VOffset=ANALOG_OFFSET,enabled=True,BWLimited=False)
   ps.setChannel('B','DC',VRange=7.0,VOffset=0.0,enabled=True,BWLimited=False)
   nSamples = NUM_SAMPLES
   (freq,maxSamples) = ps.setSamplingFrequency(SAMPLE_RATE,nSamples)
-  print("Actual frequency %d Hz" % freq)
+  print "Actual frequency %d Hz" % freq
   ser = serial.Serial('/dev/ttyUSB0',9600)
   if NUM_CAPTURES == 1:
     traces = np.zeros((1,NUM_SAMPLES),np.float32)
@@ -154,5 +154,5 @@ if __name__ == "__main__":
   ser.close()
   ps.stop()
   ps.close()
-  print("Closing interfaces and saving, OK to unplug...")
+  print "Closing interfaces and saving, OK to unplug..."
   np.savez(WRITE_FILE,traces=traces,data=data,data_out=data_out,freq=[freq])

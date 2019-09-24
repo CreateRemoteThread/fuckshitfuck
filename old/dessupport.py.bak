@@ -66,7 +66,7 @@ def expand_data_npz(in_str):
   return l
 
 def permute(table,blk):
-  return list([blk[x] for x in table])
+  return list(map(lambda x: blk[x], table))
 
 # def permute(table,blk):
 #   out = [0] * len(table)
@@ -82,7 +82,7 @@ def inv_permute(table,blk,default_char=2):
       pt[table[index]] = int(blk[index])
     else:
       if pt[table[index]] != int(blk[index]):
-        print("fail - mismatch in inv_permute")
+        print "fail - mismatch in inv_permute"
         sys.exit(0)
   return pt
 
@@ -111,7 +111,7 @@ def bytesToBitstring(in_str):
   return out
 
 def bitstringToBytes(in_str):
-  return [int(mapToInteger(in_str[i:i + 8],8)) for i in range(0, len(in_str), 8)]
+  return [int(mapToInteger(in_str[i:i + 8],8)) for i in xrange(0, len(in_str), 8)]
 
 class desSplit:
   def __init__(self,pt):
@@ -125,11 +125,11 @@ class desSplit:
     shiftKeyR.append(shiftKeyR[0])
     del shiftKeyR[0]
     shiftedKey = shiftKeyL + shiftKeyR
-    print(len(shiftedKey))
+    print len(shiftedKey)
     px_pc2 = permute(PC2TAB,shiftedKey)
     px_bytes = bitstringToBytes(px_pc2)
     for x in px_bytes:   # we know the reference infrastructure is correct
-      print("%02x" % x,)  # but there must be a correlated leak...
+      print "%02x" % x,  # but there must be a correlated leak...
 
 def stringify(hex_in):
   return "".join([chr(hexbyte) for hexbyte in hex_in])
@@ -141,12 +141,12 @@ class desRecombine:
       pt_temp += [ord(x) - ord('0') for x in bin(pt_byte)[2:].rjust(6,"0")]
       # pt_temp += [0,0]
       # pt_temp += [px[0], px[2], px[3], px[4], px[5], px[1]]
-    pt_temp_recovered = [int(mapToInteger(pt_temp[i:i + 8],8)) for i in range(0, len(pt_temp), 8)]
+    pt_temp_recovered = [int(mapToInteger(pt_temp[i:i + 8],8)) for i in xrange(0, len(pt_temp), 8)]
     # print [hex(i) for i in pt_temp_recovered]
     inv_pt = inv_permute(PC2TAB,pt_temp) # 48 bits in, 56 bits out
     # print inv_pt
     # print len(inv_pt)
-    inv_pt_hexlify = [int(mapToInteger(inv_pt[i:i + 8],8)) for i in range(0, len(inv_pt), 8)]
+    inv_pt_hexlify = [int(mapToInteger(inv_pt[i:i + 8],8)) for i in xrange(0, len(inv_pt), 8)]
     # print "INVERTED PC2"
     # print [hex(h) for h in inv_pt_hexlify]
     REAL_INVPC2 = [0xc0, 0x85, 0x66, 0x9d, 0x75, 0xc6, 0x7d]
@@ -165,7 +165,7 @@ class desRecombine:
     # print inv_pt
     # the last bit is always lost...
     inv_pc1 = inv_permute(PC1TAB,inv_pt,3) + [3]
-    print(inv_pc1)
+    print inv_pc1
     # REAL_KEY = [0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6]
     # real_exp = bytesToBitstring(REAL_KEY)
     # for i in range(0,len(real_exp)):
@@ -193,7 +193,7 @@ class desRecombine:
       # print binascii.hexlify(try_hexstr)
       d = DES.new(try_hexstr,DES.MODE_ECB)
       if d.encrypt(stringify(knownPlain)) == stringify(knownCipher):
-        print("GOTCHA: %s" % binascii.hexlify(try_hexstr))
+        print "GOTCHA: %s" % binascii.hexlify(try_hexstr)
       # else:
       #   print binascii.hexlify(d.encrypt(stringify(knownPlain)))
 
@@ -206,7 +206,7 @@ class desIntermediateValue:
   def preprocess(self,MyPT):
     d = permute(IPTAB,expand_data_npz(MyPT))
     d_ex = permute(ETAB,d[32:])
-    self.d_ex = [d_ex[i:i+6] for i in range(0,len(d_ex),6)]
+    self.d_ex = [d_ex[i:i+6] for i in xrange(0,len(d_ex),6)]
 
   def generateSbox(self,byte_posn,key):
     tmp_d = int(mapToInteger(self.d_ex[byte_posn]))

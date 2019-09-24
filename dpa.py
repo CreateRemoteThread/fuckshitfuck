@@ -34,7 +34,7 @@ def deriveKey(data,plaintexts):
   global TRACE_MAX
   recovered = zeros(16)
   for BYTE_POSN in range(0,16):
-    print "Attempting recovery of byte %d..." % BYTE_POSN
+    print("Attempting recovery of byte %d..." % BYTE_POSN)
     plfh = zeros(256)
     for KEY_GUESS in range(0,256):
       numGroup1 = 0
@@ -59,20 +59,20 @@ def deriveKey(data,plaintexts):
       diffProfile = abs(group1[:] - group2[:])
       plfh[KEY_GUESS] = max(diffProfile)
     sorted_dpa = argsort(plfh)[::-1]
-    print "Selected %02x, %f, %f, %f" % (argmax(plfh),plfh[sorted_dpa[0]],plfh[sorted_dpa[1]],plfh[sorted_dpa[2]])
-    plt.plot(range(0,256),plfh)
+    print("Selected %02x, %f, %f, %f" % (argmax(plfh),plfh[sorted_dpa[0]],plfh[sorted_dpa[1]],plfh[sorted_dpa[2]]))
+    plt.plot(list(range(0,256)),plfh)
     recovered[BYTE_POSN] = argmax(plfh)
   return recovered
 
 fn = None
 
 def usage():
-  print " dpa.py : part of the fuckshitfuck toolkit"
-  print "----------------------------------------------"
-  print " -h : prints this message"
-  print " -o : offset to start correlating from"
-  print " -n : number of samples per trace"
-  print " -f : trace file (.npz from grab3.py)"
+  print(" dpa.py : part of the fuckshitfuck toolkit")
+  print("----------------------------------------------")
+  print(" -h : prints this message")
+  print(" -o : offset to start correlating from")
+  print(" -n : number of samples per trace")
+  print(" -f : trace file (.npz from grab3.py)")
 
 if __name__ == "__main__":
   opts, remainder = getopt.getopt(sys.argv[1:],"ho:n:f:c:",["help","offset=","samples=","file=","count="])
@@ -88,14 +88,14 @@ if __name__ == "__main__":
       TRACE_MAX = int(arg)
     elif opt in ("-f","--file"):
       fn = arg
-  print "TRACE_OFFSET = %d" % TRACE_OFFSET
-  print "TRACE_LENGTH = %d" % TRACE_LENGTH
+  print("TRACE_OFFSET = %d" % TRACE_OFFSET)
+  print("TRACE_LENGTH = %d" % TRACE_LENGTH)
   if fn is None:
-    print "You must specify a file with -f"
+    print("You must specify a file with -f")
     sys.exit(0)
-  print "Stage 1: Loading plaintexts..."
+  print("Stage 1: Loading plaintexts...")
   data,plaintexts = loadTraces(fn)
-  print "Deriving key... wish me luck!"
+  print("Deriving key... wish me luck!")
   r = deriveKey(data,plaintexts)
   plt.title("AES Power Leakage v Hypothesis Overview")
   plt.ylabel("Maximum Diff. of Means")
@@ -104,12 +104,12 @@ if __name__ == "__main__":
   out = ""
   for i in range(0,16):
     out += "%02x " % int(r[i])
-  print "Done: %s" % out
+  print("Done: %s" % out)
   out = ""
   actualKey = [0x2b,0x7e,0x15,0x16,0x28,0xae,0xd2,0xa6,0xab,0xf7,0x15,0x88,0x09,0xcf,0x4f,0x3c]
   out = ""
   for i in range(0,16):
     out += "%02x " % int(actualKey[i])
-  print "Done: %s" % out
+  print("Done: %s" % out)
   out = ""
 
