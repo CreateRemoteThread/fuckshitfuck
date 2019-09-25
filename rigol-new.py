@@ -9,6 +9,7 @@ import time
 import numpy as np
 import binascii
 import matplotlib.pyplot as plt
+import support.filemanager
 
 IP_ADDR = "10.10.10.4"
 
@@ -116,7 +117,7 @@ for i in range(0,TRACE_COUNT):
   data[i,:] = [ord(x) for x in rand_input]
   data_out[i,:] = [ord(x) for x in binascii.unhexlify(ctx_out[1:])]
 
-np.savez(SAVEFILE,traces=traces,data=data,data_out=data_out,freq=[250000000])
+support.filemanager.save(SAVEFILE,traces=traces,data=data,data_out=data_out)
 scope.run()
 scope.close()
 ser.close()

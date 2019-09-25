@@ -11,6 +11,7 @@ import time
 import getopt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import support.filemanager
 
 TRIGGERS = 0
 
@@ -173,7 +174,10 @@ if __name__ == "__main__":
   if SPECGRAM_EN == False:
     fig, ax1 = plt.subplots()
   for f in ADDITIONAL_FILES:
-    df = load(f,mmap_mode = 'r')
+    df = support.filemanager.load(f)
+    # df = load(f,mmap_mode = 'r')
+    # print(TRACES)
+    # sys.exit(0)
     for i in TRACES:
       if OFFSET == 0 and COUNT == 0:
         d = df['traces'][i]

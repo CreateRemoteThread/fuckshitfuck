@@ -10,6 +10,7 @@ import uuid
 from picoscope import ps2000a
 import random
 import numpy as np
+import support.filemanager
 
 class SIMController:
   def __init__(self):
@@ -161,4 +162,4 @@ if __name__ == "__main__":
       traces[i:] = dataA
       data[i:] = next_rand
       data_out[i:] = next_autn
-    np.savez(CONFIG_WRITEFILE,traces=traces,data=data,data_out=data_out,freq=[freq])
+    support.filemanager.save(CONFIG_WRITEFILE,traces=traces,data=data,data_out=data_out)

@@ -9,13 +9,14 @@ import sys
 import glob
 import binascii
 from dessupport import desIntermediateValue
+import support.filemanager
 
 TRACE_OFFSET = 0
 TRACE_LENGTH = 0
 TRACE_MAX = 0
 
 def loadTraces(fns):
-  dx = np.load(fns,"r")
+  dx = support.filemanager.load(fns)
   return (dx['traces'],dx['data'])
 
 MAX_BYTES = 8

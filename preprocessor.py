@@ -4,6 +4,7 @@ from scipy.signal import butter,lfilter,freqz
 from numpy import *
 import getopt
 import sys
+import support.filemanager
 
 def butter_lowpass(cutoff, fs, order=5):
   nyq = 0.5 * fs
@@ -163,7 +164,7 @@ if __name__ == "__main__":
     sys.exit(0)
   printConfig()
   savedDataIndex = 0
-  df = load(CONFIG_INFILE,mmap_mode='r')
+  df = support.filemanager.load(CONFIG_INFILE)
   if CONFIG_USE_LOWPASS:
     ref = butter_lowpass_filter(df['traces'][CONFIG_REFTRACE],CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
   else:

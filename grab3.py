@@ -8,6 +8,7 @@ import getopt
 import sys
 import serial
 import numpy as np
+import support.filemanager
 
 SAMPLE_RATE = 64000000 
 NUM_SAMPLES = 200000
@@ -155,4 +156,4 @@ if __name__ == "__main__":
   ps.stop()
   ps.close()
   print("Closing interfaces and saving, OK to unplug...")
-  np.savez(WRITE_FILE,traces=traces,data=data,data_out=data_out,freq=[freq])
+  support.filemanager.save(WRITE_FILE,traces=traces,data=data,data_out=data_out)

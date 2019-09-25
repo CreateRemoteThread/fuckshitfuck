@@ -7,6 +7,7 @@ import glob
 import getopt
 import matplotlib.pyplot as plt
 import binascii
+import support.filemanager
 
 TRACE_OFFSET = 0
 TRACE_LENGTH = 0
@@ -39,7 +40,7 @@ def getUsefulTraceLength(fn):
   return c
 
 def loadTraces(fns):
-  dx = np.load(fns,"r")
+  dx = support.filemanager.load(fns)
   return (dx['traces'],dx['data'])
 
 def deriveKey(data,plaintexts):

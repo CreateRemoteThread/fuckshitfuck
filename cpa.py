@@ -8,6 +8,7 @@ import getopt
 import sys
 import glob
 import binascii
+import support.filemanager
 
 TRACE_OFFSET = 0
 TRACE_LENGTH = 17000
@@ -38,9 +39,8 @@ def getUsefulTraceLength(fn):
   return c
 
 def loadTraces(fns):
-  dx = np.load(fns,"r")
+  dx = support.filemanager.load(fns)
   return (dx['traces'],dx['data'])
-
 
 MAX_BYTES = 16
 
@@ -62,6 +62,7 @@ def deriveKey(data,plaintexts):
       # print "round trace_count = %d" % trace_count
       hyp = zeros(trace_count)
       for tnum in range(0,trace_count):
+        # hyp[tnum] = bin(plaintexts[tnum,bnum]  ^ kguess).count("1")
         hyp[tnum] = bin(sbox[plaintexts[tnum,bnum]  ^ kguess]).count("1")
       meanh = np.mean(hyp,dtype=np.float64)
       meant = np.mean(data,axis=0,dtype=np.float64)[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
