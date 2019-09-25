@@ -7,7 +7,7 @@ DEFAULT_AES_SBOX = [99,124,119,123,242,107,111,197,48,1,103,43,254,215,171,118,2
 
 class AES_SboxOut_HW:
   def __init__(self):
-    self.roundCount = 16
+    self.keyLength = 16
     self.fragmentMax = 256
 
   def loadPlaintextArray(self,pt):
@@ -21,9 +21,13 @@ class AES_SboxOut_HW:
     global DEFAULT_AES_SBOX
     return bin(DEFAULT_AES_SBOX[self.pt[tnum,bnum]  ^ kguess]).count("1")
 
+  def genIValRaw(self,tnum,bnum,kguess):
+    global DEFAULT_AES_SBOX
+    return DEFAULT_AES_SBOX[self.pt[tnum,bnum]  ^ kguess]
+
 class DES_SboxOut_HW:
   def __init__(self):
-    self.roundCount = 8  
+    self.keyLength = 8  
     self.fragmentMax = 64
 
   def loadPlaintextArray(self,plaintexts):
@@ -41,6 +45,9 @@ class DES_SboxOut_HW:
 
   def genIVal(self,tnum,bnum,kguess):
     return bin(self.desManager[tnum].generateSbox(bnum,kguess)).count("1")
+
+  def genIValRaw(self,tnum,bnum,kguess):
+    self.desManager[tnum].generateSbox(bnum,kguess)
 
 def usage():
   print("")

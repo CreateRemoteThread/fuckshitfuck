@@ -35,10 +35,10 @@ def deriveKey(data,plaintexts):
   global CONFIG_LEAKMODEL
   global CONFIG_PLOT
   global TRACE_MAX
-  bestguess = [0] * 8
   leakmodel = support.attack.fetchModel(CONFIG_LEAKMODEL)
   leakmodel.loadPlaintextArray(plaintexts)
-  for bnum in range(0,leakmodel.roundCount):
+  bestguess = [0] * leakmodel.keyLength
+  for bnum in range(0,leakmodel.keyLength):
     cpaoutput = [0]  * leakmodel.fragmentMax
     maxcpa = [0] * leakmodel.fragmentMax
     print("Correlating hypotheses for byte %d" % bnum)
