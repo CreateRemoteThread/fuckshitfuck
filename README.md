@@ -14,7 +14,7 @@ This toolkit comprises:
   - ./preprocessor.py, for temporal alignment of traces
 - Analysis:
   - ./cpa.py, a multi-model tool for correlation analysis
-  - ./dpa.py, a multi-model tool for differential analysis (WIP)
+  - ./dpa.py, a multi-model tool for differential analysis
   - ./plot.py, a simple matplotlib-based tool to view sets of traces
 
 Note the correlation and differential analysis front-ends are now decoupled from the leakage modelling back-ends - models can be found in support/attack.py. cpa.py and dpa.py typically do not need to be changed to analyze traces using different leakage hypotheses.
