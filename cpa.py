@@ -1,5 +1,13 @@
 #!/usr/bin/python
 
+# Version 2 - Multi-model Correlation Attack Script
+# ========================================================================
+# ./cpa.py -f /workingdir/lol.traces -o 1000 -n 8000 -a AES_SboxOut_HW
+#   - use trace set specified in lol.traces (support/filemanager.py)
+#   - each trace, ignore samples before 1000
+#   - each trace, only use 8000 samples starting from 1000
+#   - use the AES_SboxOut_HW model (support/attack.py)
+
 import numpy as np
 from scipy.signal import butter, lfilter, freqz
 import matplotlib.pyplot as plt

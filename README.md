@@ -11,12 +11,13 @@ This toolkit comprises:
   - ./rigol-new.py, for acquisition from rigol scopes
   - ./x/fuck.py, for pcsc+picoscope acquisition from smartcards
 - Preprocessing:
-  - ./preprocessor.py, for temporal alignment and of traces
+  - ./preprocessor.py, for temporal alignment of traces
 - Analysis:
-  - ./dpa-finder.py, for finding where maximum leakages are in a signal
-  - ./cpa.py, for sbox-output correlation against AES
-  - ./cpa-des.py, for correlation attacks against DES
-  - ./dpa.py, for sbox-output last-bit differential analysis against AES
+  - ./cpa.py, a multi-model tool for correlation analysis
+  - ./dpa.py, a multi-model tool for differential analysis (WIP)
+  - ./plot.py, a simple matplotlib-based tool to view sets of traces
+
+Note the correlation and differential analysis front-ends are now decoupled from the leakage modelling back-ends - models can be found in support/attack.py. cpa.py and dpa.py typically do not need to be changed to analyze traces using different leakage hypotheses.
 
 Some test targets are provided in target/ and pictarget-3.X/
 
