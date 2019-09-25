@@ -217,4 +217,4 @@ if __name__ == "__main__":
       else:
         print("Index %d, discarding (correlation is %f, index is %d)" % (i,msv,msi))
   print("Saving %d records" % savedDataIndex)
-  savez(CONFIG_OUTFILE,traces=traces[0:savedDataIndex],data=data[0:savedDataIndex],data_out=data_out[0:savedDataIndex],freq=df['freq'])
+  support.filemanager.save(CONFIG_OUTFILE,traces=traces[0:savedDataIndex],data=data[0:savedDataIndex],data_out=data_out[0:savedDataIndex])

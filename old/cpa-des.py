@@ -21,7 +21,10 @@ def loadTraces(fns):
 
 MAX_BYTES = 8
 
+CONFIG_PLOT = True
+
 def deriveKey(data,plaintexts):
+  global CONFIG_PLOT
   global TRACE_MAX
   bestguess = [0] * 8
   desManager = {}
@@ -60,7 +63,8 @@ def deriveKey(data,plaintexts):
           d[d_index] = d_[d_index]
       cpaoutput[kguess] = sumnum / d
       maxcpa[kguess] = max(abs(cpaoutput[kguess]))
-    plt.plot(list(range(0,64)),maxcpa)
+    if CONFIG_PLOT:
+      plt.plot(list(range(0,64)),maxcpa)
     bestguess[bnum] = np.argmax(maxcpa)
     sortedcpa = np.argsort(maxcpa)[::-1]
     print("Selected: %02x; CPA: %f, %f, %f" % (bestguess[bnum], maxcpa[bestguess[bnum]], maxcpa[sortedcpa[1]],maxcpa[sortedcpa[2]]))
@@ -78,9 +82,10 @@ def usage():
   print(" -o : offset to start correlating from")
   print(" -n : number of samples per trace")
   print(" -f : trace file (.npz from grab3.py)")
+  print(" --txt : do not plot (ssh mode)")
 
 if __name__ == "__main__":
-  opts, remainder = getopt.getopt(sys.argv[1:],"ho:n:f:c:",["help","offset=","samples=","file=","count="])
+  opts, remainder = getopt.getopt(sys.argv[1:],"ho:n:f:c:",["help","offset=","samples=","file=","count=","txt"])
   for opt, arg in opts:
     if opt in ("-h","--help"):
       usage()
@@ -91,6 +96,8 @@ if __name__ == "__main__":
       TRACE_LENGTH = int(arg)
     elif opt in ("-c","--count"):
       TRACE_MAX = int(arg)
+    elif opt == "--txt":
+      CONFIG_PLOT = False
     elif opt in ("-f","--file"):
       fn = arg
   print("TRACE_OFFSET = %d" % TRACE_OFFSET)
@@ -105,10 +112,11 @@ if __name__ == "__main__":
     print("Setting trace length to %d" % TRACE_LENGTH)
   print("Stage 2: Deriving key... wish me luck!")
   r = deriveKey(data,plaintexts)
-  plt.title("DES SubKey Correlation Overview")
-  plt.ylabel("Correlation")
-  plt.xlabel("Hypothesis")
-  plt.show()
+  if CONFIG_PLOT:
+    plt.title("DES SubKey Correlation Overview")
+    plt.ylabel("Correlation")
+    plt.xlabel("Hypothesis")
+    plt.show()
   out = ""
   for i in range(0,8):
     out += "%02x " % int(r[i])
