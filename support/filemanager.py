@@ -22,7 +22,12 @@ def convert(fn):
   save(BASENAME,df["traces"],df["data"],df["data_out"])
   os.remove(fn)
 
-def save(fn,traces=None,data=None,data_out=None,freq=None):
+def save(fn_,traces=None,data=None,data_out=None,freq=None):
+  if ".npz" in fn_ or ".traces" in fn_:
+    print("Do not save as .npz or .traces. Removing suffix")
+    fn = fn_.replace(".npz","").replace(".traces","")
+  else:
+    fn = fn_
   try:
     WORKING_ROOT = "/".join(fn.split("/")[:-1])
   except:

@@ -34,6 +34,7 @@ CONFIG_MCF_CUTOFF = 0.9
 
 USE_MAXCORR = 1
 USE_MINSAD = 2
+DO_LOWPASS = 3
 
 CONFIG_STRATEGY = USE_MAXCORR
 
@@ -89,7 +90,7 @@ def printHelp():
   print(" -h : print this message")
   print(" -f <file> : specify input file")
   print(" -w <file> : specify output file")
-  print(" -strategy [CORRCOEFF,SAD] : specify preprocess strategy")
+  print(" -strategy [CORRCOEFF,SAD,LOWPASS] : specify preprocess strategy")
   print(" -c <cutoff> : specify max SAD cutoff OR min correlation coeff cutoff")
   print("             : everything not matching this is discarded!!!!")
   print(" -l <cutoff,samplerate,order> : lowpass before preprocessing")
@@ -106,8 +107,10 @@ def printConfig():
   print(" Output file = %s" % CONFIG_OUTFILE)
   if CONFIG_STRATEGY == USE_MAXCORR:
     print(" Strategy: Maximize correlation coefficient")
-  else:
+  elif CONFIG_STRATEGY == USE_MINSAD:
     print(" Strategy: Minimize Sum of Absolute Difference")
+  elif CONFIG_STRATEGY == DO_LOWPASS:
+    print(" Action: Apply Lowpass and Save")
   if CONFIG_USE_LOWPASS:
     print(" Use Lowpass: yes")
     print("   Lowpass Sample Rate: %d Hz" % CONFIG_SAMPLERATE)
@@ -115,10 +118,11 @@ def printConfig():
     print("   Lowpass Order: %d" % CONFIG_ORDER)
   else:
     print(" Use Lowpass: no")
-  print(" Window configuration:")
-  print("   Window offset: %d samples" % CONFIG_WINDOW_OFFSET)
-  print("   Max slide = %d samples" % CONFIG_WINDOW_SLIDE)
-  print("   Window length = %d samples" % CONFIG_WINDOW_LENGTH)
+  if CONFIG_STRATEGY in (USE_MAXCORR,USE_MINSAD):
+    print(" Window configuration:")
+    print("   Window offset: %d samples" % CONFIG_WINDOW_OFFSET)
+    print("   Max slide = %d samples" % CONFIG_WINDOW_SLIDE)
+    print("   Window length = %d samples" % CONFIG_WINDOW_LENGTH)
   print("-----------------------------------------------------")
 
 if __name__ == "__main__":
@@ -135,8 +139,10 @@ if __name__ == "__main__":
         CONFIG_STRATEGY = USE_MAXCORR
       elif value.upper() in ("SAD","SADNESS"):
         CONFIG_STRATEGY = USE_MINSAD
+      elif value.upper() == "LOWPASS":
+        CONFIG_STRATEGY = DO_LOWPASS
       else:
-        print("Invalid preprocessing strategy. Valid options are CORRCOEF,SAD")
+        print("Invalid preprocessing strategy. Valid options are CORRCOEF,SAD,LOWPASS")
         sys.exit(0)
     elif arg in ("-l","--lowpass"):
       try:
@@ -216,5 +222,13 @@ if __name__ == "__main__":
           savedDataIndex += 1
       else:
         print("Index %d, discarding (correlation is %f, index is %d)" % (i,msv,msi))
+  elif CONFIG_STRATEGY == DO_LOWPASS:
+    for i in range(0,len(df['traces'])):
+      x = df['traces'][i]
+      traces[i] = butter_lowpass_filter(x,CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
+      data[i] = df['data'][i]
+      data_out[i] = df['data_out'][i]
+      savedDataIndex += 1
+      print("Lowpassed %d" % i)
   print("Saving %d records" % savedDataIndex)
   support.filemanager.save(CONFIG_OUTFILE,traces=traces[0:savedDataIndex],data=data[0:savedDataIndex],data_out=data_out[0:savedDataIndex])

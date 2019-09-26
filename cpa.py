@@ -31,10 +31,13 @@ def loadTraces(fns):
 CONFIG_PLOT = True
 CONFIG_LEAKMODEL = "helpmsg"
 
+leakmodel = None
+
 def deriveKey(data,plaintexts):
   global CONFIG_LEAKMODEL
   global CONFIG_PLOT
   global TRACE_MAX
+  global leakmodel
   leakmodel = support.attack.fetchModel(CONFIG_LEAKMODEL)
   leakmodel.loadPlaintextArray(plaintexts)
   bestguess = [0] * leakmodel.keyLength
@@ -74,7 +77,11 @@ def deriveKey(data,plaintexts):
       cpaoutput[kguess] = sumnum / d
       maxcpa[kguess] = max(abs(cpaoutput[kguess]))
     if CONFIG_PLOT:
-      plt.plot(list(range(0,leakmodel.fragmentMax)),maxcpa)
+      try:
+        plt.plot(list(range(0,leakmodel.fragmentMax)),maxcpa)
+      except:
+        print("Fault in plt.plot. CONFIG_PLOT = False")
+        CONFIG_PLOT = False
     bestguess[bnum] = np.argmax(maxcpa)
     sortedcpa = np.argsort(maxcpa)[::-1]
     print("Selected: %02x; CPA: %f, %f, %f" % (bestguess[bnum], maxcpa[bestguess[bnum]], maxcpa[sortedcpa[1]],maxcpa[sortedcpa[2]]))
@@ -126,12 +133,12 @@ if __name__ == "__main__":
   print("Stage 2: Deriving key... wish me luck!")
   r = deriveKey(data,plaintexts)
   if CONFIG_PLOT:
-    plt.title("DES SubKey Correlation Overview")
+    plt.title("%s SubKey Correlation Overview" % CONFIG_LEAKMODEL)
     plt.ylabel("Correlation")
     plt.xlabel("Hypothesis")
     plt.show()
   out = ""
-  for i in range(0,8):
+  for i in range(0,leakmodel.keyLength):
     out += "%02x " % int(r[i])
   print("Done: %s" % out)
   out = ""

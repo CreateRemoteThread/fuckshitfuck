@@ -47,7 +47,7 @@ class DES_SboxOut_HW:
     return bin(self.desManager[tnum].generateSbox(bnum,kguess)).count("1")
 
   def genIValRaw(self,tnum,bnum,kguess):
-    self.desManager[tnum].generateSbox(bnum,kguess)
+    return self.desManager[tnum].generateSbox(bnum,kguess)
 
 def usage():
   print("")
@@ -61,7 +61,7 @@ def fetchModel(modeltype):
   if modeltype == "AES_SboxOut_HW":
     return AES_SboxOut_HW()
   elif modeltype == "DES_SboxOut_HW":
-    return DES_SBoxOut_HW()
+    return DES_SboxOut_HW()
   else:
     usage()
     sys.exit(0)

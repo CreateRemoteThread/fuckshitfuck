@@ -33,8 +33,11 @@ def loadTraces(fns):
   dx = support.filemanager.load(fns)
   return (dx['traces'],dx['data'])
 
+leakmodel = None
+
 def deriveKey(data,plaintexts):
   global TRACE_MAX
+  global leakmodel
   leakmodel = support.attack.fetchModel(CONFIG_LEAKMODEL)
   leakmodel.loadPlaintextArray(plaintexts) 
   recovered = zeros(leakmodel.keyLength)
@@ -52,11 +55,7 @@ def deriveKey(data,plaintexts):
       else:
         trace_count = TRACE_MAX
       for TRACE_NUM in range(0,trace_count):
-        # hyp = sbox[plaintexts[TRACE_NUM,BYTE_POSN] ^ KEY_GUESS]
         hypothesis = leakmodel.genIValRaw(TRACE_NUM,BYTE_POSN,KEY_GUESS) # sbox[plaintexts[TRACE_NUM,BYTE_POSN] ^ KEY_GUESS]
-        # if hyp != hypothesis:
-        #   print("Fatal, hypothesis calculation wrong")
-        #   sys.exit(0)
         if bin(hypothesis)[2:][-1] == "1":
           group1[:] += data[TRACE_NUM,TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
           numGroup1 += 1
@@ -70,7 +69,11 @@ def deriveKey(data,plaintexts):
     sorted_dpa = argsort(plfh)[::-1]
     print("Selected %02x, %f, %f, %f" % (argmax(plfh),plfh[sorted_dpa[0]],plfh[sorted_dpa[1]],plfh[sorted_dpa[2]]))
     if CONFIG_PLOT:
-      plt.plot(list(range(0,leakmodel.fragmentMax)),plfh)
+      try:
+        plt.plot(list(range(0,leakmodel.fragmentMax)),plfh)
+      except:
+        print("Fault in plt.plot. CONFIG_PLOT = False")
+        CONFIG_PLOT = False
     recovered[BYTE_POSN] = argmax(plfh)
   return recovered
 
@@ -114,12 +117,12 @@ if __name__ == "__main__":
   print("Deriving key... wish me luck!")
   r = deriveKey(data,plaintexts)
   if CONFIG_PLOT:
-    plt.title("AES Power Leakage v Hypothesis Overview")
+    plt.title("%s Power Leakage v Hypothesis Overview" % CONFIG_LEAKMODEL)
     plt.ylabel("Maximum Diff. of Means")
     plt.xlabel("Key Hypothesis")
     plt.show()
   out = ""
-  for i in range(0,16):
+  for i in range(0,leakmodel.keyLength):
     out += "%02x " % int(r[i])
   print("Done: %s" % out)
   out = ""
