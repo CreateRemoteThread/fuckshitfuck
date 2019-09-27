@@ -11,6 +11,7 @@ from picoscope import ps2000a
 import random
 import numpy as np
 import support.filemanager
+import random
 
 class SIMController:
   def __init__(self):
@@ -86,6 +87,7 @@ def usage():
   print(" -c: set number of traces (default 1000)")
   print(" -o: set vertical offset (default: 0.0)")
   print(" -w: set output file (default: [UUID].npz)")
+  print(" --tlva: capture 50% fixed plaintext")
   sys.exit(0)
 
 CONFIG_SAMPLERATE = 64000000
@@ -93,10 +95,11 @@ CONFIG_SAMPLECOUNT = 500000
 CONFIG_TRACECOUNT = 1000
 CONFIG_ANALOGOFFSET = 0.0
 CONFIG_WRITEFILE = "%s.npz" % uuid.uuid4()
-VRANGE_PRIMARY = 0.05
+CONFIG_TLVA = False
+VRANGE_PRIMARY = 0.02
 
 if __name__ == "__main__":
-  optlist, args = getopt.getopt(sys.argv[1:],"hr:n:c:o:w:",["help","samplerate=","samples=","count=","offset=","write_file="])
+  optlist, args = getopt.getopt(sys.argv[1:],"hr:n:c:o:w:",["help","samplerate=","samples=","count=","offset=","write_file=","tlva"])
   for arg,value in optlist:
     if arg in ("-h","--help"):
       usage()
@@ -110,6 +113,8 @@ if __name__ == "__main__":
       CONFIG_ANALOGOFFSET = float(value)
     elif arg in ("-w","--write_file"):
       CONFIG_WRITEFILE = value
+    elif arg in ("--tlva"):
+      CONFIG_TLVA = True
     else:
       print("Unknown argument: %s" % arg)
       sys.exit(0)
@@ -125,6 +130,8 @@ if __name__ == "__main__":
     sys.exit(0)
   sc = SIMController()
   if CONFIG_TRACECOUNT == 1:
+    if CONFIG_TLVA:
+      print("--tlva needs a -c of > 1. ignoring tlva.")
     print(" >> YOU MUST MANUALLY CAPTURE ON YOUR SCOPE <<") 
     print(" >> NO SCOPE AUTOMATION ON C = 1 <<") 
     next_rand = [random.randint(0,255) for _ in range(16)]
@@ -149,8 +156,13 @@ if __name__ == "__main__":
     (freq,maxSamples) = ps.setSamplingFrequency(CONFIG_SAMPLERATE,nSamples)
     print("Actual sampling frequency: %d Hz" % freq)
     for i in range(0,CONFIG_TRACECOUNT):
-      next_rand = [random.randint(0,255) for _ in range(16)]
-      next_autn = [random.randint(0,255) for _ in range(16)]
+      if CONFIG_TLVA:
+        if random.randint(0,100) % 2 == 0:
+          next_rand = [random.randint(0,255) for _ in range(16)]
+          next_autn = [random.randint(0,255) for _ in range(16)]
+        else:
+          next_rand = [0xAA] * 16
+          next_autn = [0xAA] * 16
       str_rand = "".join(["%02x" % _ for _ in next_rand])
       str_autn = "".join(["%02x" % _ for _ in next_autn])
       print("[%06d] %s:%s" % (i,str_rand,str_autn))

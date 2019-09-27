@@ -9,6 +9,9 @@ captures*/
 set*/
 sampledata/
 
+*.traces
+*.data/
+
 **/*.npz
 *.npz
 
