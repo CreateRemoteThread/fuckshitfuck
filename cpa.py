@@ -84,7 +84,7 @@ def deriveKey(data,plaintexts):
         CONFIG_PLOT = False
     bestguess[bnum] = np.argmax(maxcpa)
     sortedcpa = np.argsort(maxcpa)[::-1]
-    print("Selected: %02x; CPA: %f, %f, %f" % (bestguess[bnum], maxcpa[bestguess[bnum]], maxcpa[sortedcpa[1]],maxcpa[sortedcpa[2]]))
+    print("Selected: %02x; CPA: %f, %02x %f, %02x %f" % (bestguess[bnum], maxcpa[bestguess[bnum]], sortedcpa[1], maxcpa[sortedcpa[1]], sortedcpa[2], maxcpa[sortedcpa[2]]))
     # for tnum_cumulative in range(0,plaintexts[:,0].size):
     #   desManager[tnum_cumulative].saveCumulative(bnum,bestguess[bnum])
     #   desManager[tnum_cumulative].disableCumulative = True

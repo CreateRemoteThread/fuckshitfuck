@@ -36,6 +36,8 @@ def loadTraces(fns):
 leakmodel = None
 
 def deriveKey(data,plaintexts):
+  global CONFIG_LEAKMODEL
+  global CONFIG_PLOT
   global TRACE_MAX
   global leakmodel
   leakmodel = support.attack.fetchModel(CONFIG_LEAKMODEL)
@@ -67,7 +69,7 @@ def deriveKey(data,plaintexts):
       diffProfile = abs(group1[:] - group2[:])
       plfh[KEY_GUESS] = max(diffProfile)
     sorted_dpa = argsort(plfh)[::-1]
-    print("Selected %02x, %f, %f, %f" % (argmax(plfh),plfh[sorted_dpa[0]],plfh[sorted_dpa[1]],plfh[sorted_dpa[2]]))
+    print("Selected %02x, %f, %02x %f, %02x %f" % (argmax(plfh),plfh[sorted_dpa[0]],sorted_dpa[1],plfh[sorted_dpa[1]],sorted_dpa[2],plfh[sorted_dpa[2]]))
     if CONFIG_PLOT:
       try:
         plt.plot(list(range(0,leakmodel.fragmentMax)),plfh)

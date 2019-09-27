@@ -39,7 +39,7 @@ def do_tlva(fn,distinguisher):
     warnings.simplefilter("ignore")
     ttrace = scipy.stats.ttest_ind(tlva_random_traces,tlva_fixed_traces,axis=0,equal_var=False)
   # print(ttrace)
-  return np.nan_to_num(ttrace[0])
+  return (np.nan_to_num(ttrace[0]),np.nan_to_num(ttrace[1]))
 
 if __name__ == "__main__":
   optlist, args = getopt.getopt(sys.argv[1:],"f:d:",["distinguisher="])
@@ -54,9 +54,10 @@ if __name__ == "__main__":
       else:
         print("Unknown distinguisher. Valid values are EVEN, FIXED")
         sys.exit(0)
-  tt = do_tlva(CONFIG_FILE,CONFIG_DISTINGUISHER)
+  (tt,tp) = do_tlva(CONFIG_FILE,CONFIG_DISTINGUISHER)
   fig,ax1 = plt.subplots()
   fig.canvas.set_window_title("Test Vector Leakage Assessment")
+  ax1.set_title("T-Value")
   ax1.set_xlabel("Sample")
   ax1.set_ylabel("T-Test Value")
   ax1.plot(tt)

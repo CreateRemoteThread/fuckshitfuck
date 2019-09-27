@@ -32,6 +32,8 @@ CONFIG_WINDOW_SLIDE = 5000
 CONFIG_SAD_CUTOFF = 3.2
 CONFIG_MCF_CUTOFF = 0.9
 
+CONFIG_BUCKETSIZE = None
+
 USE_MAXCORR = 1
 USE_MINSAD = 2
 DO_LOWPASS = 3
@@ -123,10 +125,14 @@ def printConfig():
     print("   Window offset: %d samples" % CONFIG_WINDOW_OFFSET)
     print("   Max slide = %d samples" % CONFIG_WINDOW_SLIDE)
     print("   Window length = %d samples" % CONFIG_WINDOW_LENGTH)
+  if CONFIG_BUCKETSIZE is None:
+    print(" No bucket configured")
+  else:
+    print(" Bucket size set at %d" % CONFIG_BUCKETSIZE)
   print("-----------------------------------------------------")
 
 if __name__ == "__main__":
-  optlist,args = getopt.getopt(sys.argv[1:],"hf:w:l:r:c:",["help","strategy=","lowpass=","reftrace=","window-offset=","window-length=","window-slide=","cutoff="])
+  optlist,args = getopt.getopt(sys.argv[1:],"hf:w:l:r:c:b:",["help","strategy=","lowpass=","reftrace=","window-offset=","window-length=","window-slide=","cutoff=","bucketsize="])
   for arg, value in optlist:
     if arg == "-f":
       CONFIG_INFILE = value
@@ -162,6 +168,8 @@ if __name__ == "__main__":
       CONFIG_WINDOW_OFFSET = int(value)
     elif arg == "--window-slide":
       CONFIG_WINDOW_SLIDE = int(value)
+    elif arg in ("-b","--bucketsize"):
+      CONFIG_BUCKETSIZE = int(value)
     elif arg in ("-c","--cutoff"):
       CONFIG_SAD_CUTOFF = float(value)
       CONFIG_MCF_CUTOFF = float(value)
@@ -177,7 +185,8 @@ if __name__ == "__main__":
     ref = df['traces'][CONFIG_REFTRACE]
   numTraces = len(df['traces'])
   sampleCnt = len(df['traces'][0])
-  print("Sample count is %d" % sampleCnt)
+  print(" + Sample count is %d" % sampleCnt)
+  print(" + Trace count is %d" % numTraces)
   traces = zeros((numTraces,sampleCnt),float32)
   data = zeros((numTraces,16),uint8)
   data_out = zeros((numTraces,16),uint8)
@@ -185,6 +194,10 @@ if __name__ == "__main__":
   if CONFIG_STRATEGY == USE_MINSAD:
     for i in range(0,len(df['traces'])):
       x = df['traces'][i]
+      if CONFIG_BUCKETSIZE is not None:
+        if savedDataIndex == CONFIG_BUCKETSIZE:
+          print("The bucket is full, not processing any more...!")
+          break
       if CONFIG_USE_LOWPASS:
         r2 = butter_lowpass_filter(x,CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
       else:
@@ -205,6 +218,10 @@ if __name__ == "__main__":
   elif CONFIG_STRATEGY == USE_MAXCORR:
     for i in range(0,len(df['traces'])):
       x = df['traces'][i]
+      if CONFIG_BUCKETSIZE is not None:
+        if savedDataIndex == CONFIG_BUCKETSIZE:
+          print("The bucket is full, not processing any more...!")
+          break
       if CONFIG_USE_LOWPASS:
         r2 = butter_lowpass_filter(x,CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
       else:
@@ -225,6 +242,10 @@ if __name__ == "__main__":
   elif CONFIG_STRATEGY == DO_LOWPASS:
     for i in range(0,len(df['traces'])):
       x = df['traces'][i]
+      if CONFIG_BUCKETSIZE is not None:
+        if savedDataIndex == CONFIG_BUCKETSIZE:
+          print("The bucket is full, not processing any more...!")
+          break
       traces[i] = butter_lowpass_filter(x,CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
       data[i] = df['data'][i]
       data_out[i] = df['data_out'][i]

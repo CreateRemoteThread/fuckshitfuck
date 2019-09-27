@@ -163,6 +163,9 @@ if __name__ == "__main__":
         else:
           next_rand = [0xAA] * 16
           next_autn = [0xAA] * 16
+      else:
+        next_rand = [random.randint(0,255) for _ in range(16)]
+        next_autn = [random.randint(0,255) for _ in range(16)]
       str_rand = "".join(["%02x" % _ for _ in next_rand])
       str_autn = "".join(["%02x" % _ for _ in next_autn])
       print("[%06d] %s:%s" % (i,str_rand,str_autn))

@@ -10,6 +10,7 @@ from numpy import *
 import time
 import getopt
 import matplotlib as mpl
+mpl.use("Agg")
 import matplotlib.pyplot as plt
 import support.filemanager
 
@@ -138,11 +139,13 @@ def usage():
   print(" -F [samplerate] : plot fft, base freq in hz")
   print(" -a : plot average trace")
   print(" -s [samplerate] : plot spectrogram")
+  print(" -w [filename] : write output to file. suppresses window.")
 
 mpl.rcParams['agg.path.chunksize'] = 10000 
+CONFIG_WRITEFILE = None
 
 if __name__ == "__main__":
-  opts, remainder = getopt.getopt(sys.argv[1:],"s:ahl:n:o:c:r:f:F:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft=","highlight="])
+  opts, remainder = getopt.getopt(sys.argv[1:],"s:ahl:n:o:c:r:f:F:w:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft=","highlight="])
   for opt,arg in opts:
     if opt in ("-h","--help"):
       usage()
@@ -163,6 +166,8 @@ if __name__ == "__main__":
       configure_lowpass(arg)
     elif opt in ("-F","--fft"):
       configure_fft(arg)
+    elif opt in ("-w"):
+      CONFIG_WRITEFILE = arg
     elif opt in ("-r","--ruler"):
       RULER.append(int(float(arg)))
     else:
@@ -205,7 +210,11 @@ if __name__ == "__main__":
         ax2.set_xlabel("Time")
         ax2.specgram(d,NFFT=1024,Fs=SPECGRAM_SR,noverlap=900)
         fig.canvas.set_window_title("plot.py")
-        plt.show()
+        if CONFIG_WRITEFILE:
+          print("Saving to %s..." % CONFIG_WRITEFILE)
+          plt.savefig(CONFIG_WRITEFILE)
+        else:
+          plt.show()
         PLOT_SHOWN = True
       elif AVG_EN:
         if COUNT == 0:
@@ -231,6 +240,10 @@ if __name__ == "__main__":
     plt.ylabel(YAXIS)
     plt.xlabel(XAXIS)
     plt.grid()
-    fig.canvas.mpl_connect("button_press_event",onclick)
     fig.canvas.set_window_title("plot.py")
-    plt.show()
+    if CONFIG_WRITEFILE:
+      print("Saving to %s..." % CONFIG_WRITEFILE)
+      plt.savefig(CONFIG_WRITEFILE)
+    else:
+      fig.canvas.mpl_connect("button_press_event",onclick)
+      plt.show()
