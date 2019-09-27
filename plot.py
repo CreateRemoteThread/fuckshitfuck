@@ -10,8 +10,6 @@ from numpy import *
 import time
 import getopt
 import matplotlib as mpl
-mpl.use("Agg")
-import matplotlib.pyplot as plt
 import support.filemanager
 
 TRIGGERS = 0
@@ -173,6 +171,9 @@ if __name__ == "__main__":
     else:
       print("Unknown argument: %s" % opt)
       sys.exit(0) 
+  if CONFIG_WRITEFILE is not None:
+    mpl.use("Agg")
+  import matplotlib.pyplot as plt
   if [FFT_EN, LOWPASS_EN, AVG_EN, SPECGRAM_EN].count(True) > 1:
     print("You can only select one of -F (FFT), -l (LOWPASS) or -a (AVERAGE)")
     sys.exit(0)
@@ -210,7 +211,7 @@ if __name__ == "__main__":
         ax2.set_xlabel("Time")
         ax2.specgram(d,NFFT=1024,Fs=SPECGRAM_SR,noverlap=900)
         fig.canvas.set_window_title("plot.py")
-        if CONFIG_WRITEFILE:
+        if CONFIG_WRITEFILE is not None:
           print("Saving to %s..." % CONFIG_WRITEFILE)
           plt.savefig(CONFIG_WRITEFILE)
         else:
@@ -241,7 +242,7 @@ if __name__ == "__main__":
     plt.xlabel(XAXIS)
     plt.grid()
     fig.canvas.set_window_title("plot.py")
-    if CONFIG_WRITEFILE:
+    if CONFIG_WRITEFILE is not None:
       print("Saving to %s..." % CONFIG_WRITEFILE)
       plt.savefig(CONFIG_WRITEFILE)
     else:

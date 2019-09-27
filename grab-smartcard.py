@@ -96,7 +96,7 @@ CONFIG_TRACECOUNT = 1000
 CONFIG_ANALOGOFFSET = 0.0
 CONFIG_WRITEFILE = "%s.npz" % uuid.uuid4()
 CONFIG_TLVA = False
-VRANGE_PRIMARY = 0.02
+VRANGE_PRIMARY = 0.05
 
 if __name__ == "__main__":
   optlist, args = getopt.getopt(sys.argv[1:],"hr:n:c:o:w:",["help","samplerate=","samples=","count=","offset=","write_file=","tlva"])
