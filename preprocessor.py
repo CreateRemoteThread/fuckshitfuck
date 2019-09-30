@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import scipy.io
 from scipy.signal import butter,lfilter,freqz
 from numpy import *
 import getopt
@@ -37,6 +38,8 @@ CONFIG_BUCKETSIZE = None
 USE_MAXCORR = 1
 USE_MINSAD = 2
 DO_LOWPASS = 3
+DO_SAVECW = 4
+DO_SAVEMAT = 5
 
 CONFIG_STRATEGY = USE_MAXCORR
 
@@ -147,6 +150,10 @@ if __name__ == "__main__":
         CONFIG_STRATEGY = USE_MINSAD
       elif value.upper() == "LOWPASS":
         CONFIG_STRATEGY = DO_LOWPASS
+      elif value.upper() == "SAVEMAT":
+        CONFIG_STRATEGY = DO_SAVEMAT
+      elif value.upper() == "SAVECW":
+        CONFIG_STRATEGY = DO_SAVECW
       else:
         print("Invalid preprocessing strategy. Valid options are CORRCOEF,SAD,LOWPASS")
         sys.exit(0)
@@ -163,6 +170,7 @@ if __name__ == "__main__":
     elif arg in ("-r","--reftrace"):
       CONFIG_REFTRACE = int(value)
     elif arg == "--window-length":
+      print("Configuring window length...")
       CONFIG_WINDOW_LENGTH = int(value)
     elif arg == "--window-offset":
       CONFIG_WINDOW_OFFSET = int(value)
@@ -173,7 +181,7 @@ if __name__ == "__main__":
     elif arg in ("-c","--cutoff"):
       CONFIG_SAD_CUTOFF = float(value)
       CONFIG_MCF_CUTOFF = float(value)
-  if CONFIG_INFILE is None or CONFIG_OUTFILE is None:
+  if CONFIG_INFILE is None or CONFIG_OUTFILE is None and CONFIG_STRATEGY != DO_SAVECW:
     print("You must specify input (-f) and output files (-w)")
     sys.exit(0)
   printConfig()
@@ -251,5 +259,11 @@ if __name__ == "__main__":
       data_out[i] = df['data_out'][i]
       savedDataIndex += 1
       print("Lowpassed %d" % i)
+  elif CONFIG_STRATEGY == DO_SAVEMAT:
+    support.filemanager.save_mat(CONFIG_OUTFILE,traces=traces,data=data,data_out=data_out)
+    sys.exit(0)
+  elif CONFIG_STRATEGY == DO_SAVECW:
+    support.filemanager.save_cw(df)
+    sys.exit(0)
   print("Saving %d records" % savedDataIndex)
   support.filemanager.save(CONFIG_OUTFILE,traces=traces[0:savedDataIndex],data=data[0:savedDataIndex],data_out=data_out[0:savedDataIndex])

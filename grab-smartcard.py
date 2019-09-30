@@ -98,7 +98,7 @@ CONFIG_TRACECOUNT = 1000
 CONFIG_ANALOGOFFSET = 0.0
 CONFIG_WRITEFILE = "%s.npz" % uuid.uuid4()
 CONFIG_TLVA = False
-VRANGE_PRIMARY = 0.05
+VRANGE_PRIMARY = 0.02
 
 if __name__ == "__main__":
   optlist, args = getopt.getopt(sys.argv[1:],"hr:n:c:o:w:",["help","samplerate=","samples=","count=","offset=","write_file=","tlva"])
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     print("%s:%s" % (str_rand,str_autn))
     # /configure?io=412&clk=13255.
     # /configure?io=412&clk=170000 (for "close" to first round)
-    sc.nextg_apdu(next_rand,next_autn,debug=True)
+    sc.french_apdu(next_rand,next_autn,debug=True)
     sys.exit(0)
   else:
     print(" >> Initializing numpy bullshit")
