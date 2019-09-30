@@ -96,6 +96,7 @@ def printHelp():
   print(" -f <file> : specify input file")
   print(" -w <file> : specify output file")
   print(" -strategy [CORRCOEFF,SAD,LOWPASS] : specify preprocess strategy")
+  print("           [SAVEMAT,SAVECW] : convert trace file format")
   print(" -c <cutoff> : specify max SAD cutoff OR min correlation coeff cutoff")
   print("             : everything not matching this is discarded!!!!")
   print(" -l <cutoff,samplerate,order> : lowpass before preprocessing")
@@ -155,7 +156,7 @@ if __name__ == "__main__":
       elif value.upper() == "SAVECW":
         CONFIG_STRATEGY = DO_SAVECW
       else:
-        print("Invalid preprocessing strategy. Valid options are CORRCOEF,SAD,LOWPASS")
+        print("Invalid preprocessing strategy. Valid options are CORRCOEF,SAD,LOWPASS,SAVEMAT,SAVECW (SAVECW does not need filename)")
         sys.exit(0)
     elif arg in ("-l","--lowpass"):
       try:
@@ -260,7 +261,7 @@ if __name__ == "__main__":
       savedDataIndex += 1
       print("Lowpassed %d" % i)
   elif CONFIG_STRATEGY == DO_SAVEMAT:
-    support.filemanager.save_mat(CONFIG_OUTFILE,traces=traces,data=data,data_out=data_out)
+    support.filemanager.save_mat(CONFIG_OUTFILE,traces=df["traces"],data=df["data"],data_out=df["data_out"])
     sys.exit(0)
   elif CONFIG_STRATEGY == DO_SAVECW:
     support.filemanager.save_cw(df)
