@@ -34,9 +34,15 @@ def save_cw(dataObj=None):
     sys.exit(0)
   else:
     fn = dataObj["orig_fn"]
+    SYMLINK_ROOT = "/".join(fn.split("/")[:-1])
     traces = dataObj["traces"]
     baseName = "".join(fn.split(".")[:-1])
     WORKING_ROOT = "%s.data/" % baseName
+    with cd(SYMLINK_ROOT):
+      os.system("ln -s %s %s/save_cw_traces.npy" % (dataObj["traces_fn"].split("/")[1],WORKING_ROOT))
+      os.system("ln -s %s %s/save_cw_textin.npy" % (dataObj["data_fn"].split("/")[1],WORKING_ROOT))
+      os.system("ln -s %s %s/save_cw_textout.npy" % (dataObj["data_out_fn"].split("/")[1],WORKING_ROOT))
+      os.system("ln -s %s %s/save_cw_keylist.npy" % (dataObj["data_out_fn"].split("/")[1],WORKING_ROOT))
     with cd(WORKING_ROOT):
       f = open("project.cwp","w")
       f.write("[Trace Management]\n")
@@ -55,11 +61,9 @@ def save_cw(dataObj=None):
       f.write("prefix = save_cw_\n") 
       f.write("scopeSampleRate = 0\n") 
       f.close()
-      os.system("ln -s traces.npy save_cw_traces.npy")
-      os.system("ln -s data.npy save_cw_textin.npy")
-      os.system("ln -s data_out.npy save_cw_textout.npy")
-      os.system("ln -s data_out.npy save_cw_keylist.npy")
-      print("Done!")
+      # df["traces_fn"].split("/")[1]
+      # sys.exit(0)
+      print("Done. You can load %s/project.cwp" % WORKING_ROOT)
 
 def save(fn_,traces=None,data=None,data_out=None,freq=None):
   if ".npz" in fn_ or ".traces" in fn_:
