@@ -58,6 +58,7 @@ def save_cw(dataObj=None):
       os.system("ln -s traces.npy save_cw_traces.npy")
       os.system("ln -s data.npy save_cw_textin.npy")
       os.system("ln -s data_out.npy save_cw_textout.npy")
+      os.system("ln -s data_out.npy save_cw_keylist.npy")
       print("Done!")
 
 def save(fn_,traces=None,data=None,data_out=None,freq=None):
