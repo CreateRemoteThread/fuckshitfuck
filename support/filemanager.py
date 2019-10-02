@@ -124,6 +124,9 @@ def load(fn):
       else:
         dataObj[arg] = val
     f.close()
+    traceCount = len(dataObj["traces"])
+    numPoints = len(dataObj["traces"][0])
+    print("%d traces with %d points each loaded." % (traceCount,numPoints))
     return dataObj
 
 if __name__ == "__main__":
