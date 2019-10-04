@@ -299,4 +299,4 @@ if __name__ == "__main__":
   support.filemanager.save(CONFIG_OUTFILE,traces=traces[0:savedDataIndex],data=data[0:savedDataIndex],data_out=data_out[0:savedDataIndex])
   if CONFIG_DISCARD:
     print("Discard piling %d records" % discardDataIndex)
-    support.filemanager.save(CONFIG_DISCARDPILE,traces=discard_traces[0:discardDataIndex],data=discard_data[0:discardDataIndex],data_out=discardta_out[0:discardDataIndex])
+    support.filemanager.save(CONFIG_DISCARDPILE,traces=discard_traces[0:discardDataIndex],data=discard_data[0:discardDataIndex],data_out=discard_data_out[0:discardDataIndex])
