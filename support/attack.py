@@ -317,6 +317,25 @@ class AES_SboxOut_HW:
     global DEFAULT_AES_SBOX
     return DEFAULT_AES_SBOX[self.pt[tnum,bnum]  ^ kguess]
 
+class AES_XorOut_HW:
+  def __init__(self):
+    self.keyLength = 16
+    self.fragmentMax = 256
+
+  def loadPlaintextArray(self,pt):
+    print("Loading plaintext array for AES Xor Out HW Attack...")
+    self.pt = pt
+
+  def loadCiphertextArray(self,ct):
+    self.ct = ct
+
+  def genIVal(self,tnum,bnum,kguess):
+    return bin(self.pt[tnum,bnum]  ^ kguess).count("1")
+
+  def genIValRaw(self,tnum,bnum,kguess):
+    return self.pt[tnum,bnum]  ^ kguess
+
+
 class DES_SboxOut_HW:
   def __init__(self):
     self.keyLength = 8  
@@ -347,6 +366,7 @@ def usage():
   print("Valid models are:")
   print(" - AES_SboxOut_HW")
   print(" - AES_TTableOut_HW")
+  print(" - AES_XorOut_HW")
   print(" - DES_SboxOut_HW")
   print("")
 
@@ -357,6 +377,8 @@ def fetchModel(modeltype):
     return DES_SboxOut_HW()
   elif modeltype == "AES_TTableOut_HW":
     return AES_TTableOut_HW()
+  elif modeltype == "AES_XorOut_HW":
+    return AES_XorOut_HW()
   else:
     usage()
     sys.exit(0)

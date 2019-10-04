@@ -42,9 +42,13 @@ DO_SAVECW = 4
 DO_SAVEMAT = 5
 
 CONFIG_STRATEGY = USE_MAXCORR
+CONFIG_MATCHONLY = False
 
 CONFIG_INFILE = None
 CONFIG_OUTFILE = None
+
+CONFIG_DISCARD = False
+CONFIG_DISCARDPILE = "/dev/null"
 
 def getSingleSAD(array1,array2):
   totalSAD = 0.0
@@ -136,7 +140,7 @@ def printConfig():
   print("-----------------------------------------------------")
 
 if __name__ == "__main__":
-  optlist,args = getopt.getopt(sys.argv[1:],"hf:w:l:r:c:b:",["help","strategy=","lowpass=","reftrace=","window-offset=","window-length=","window-slide=","cutoff=","bucketsize="])
+  optlist,args = getopt.getopt(sys.argv[1:],"hf:w:l:r:c:b:d:",["help","strategy=","lowpass=","reftrace=","window-offset=","window-length=","window-slide=","cutoff=","bucketsize=","discard="])
   for arg, value in optlist:
     if arg == "-f":
       CONFIG_INFILE = value
@@ -144,6 +148,9 @@ if __name__ == "__main__":
       CONFIG_OUTFILE = value
     elif arg in ("-h","--help"):
       printHelp()
+    elif arg in ("-d","--discard"):
+      CONFIG_DISCARD = True
+      CONFIG_DISCARDPILE = value
     elif arg == "--strategy":
       if value.upper() in ("CORRCOEF","CORRCOEFF"):
         CONFIG_STRATEGY = USE_MAXCORR
@@ -155,6 +162,8 @@ if __name__ == "__main__":
         CONFIG_STRATEGY = DO_SAVEMAT
       elif value.upper() == "SAVECW":
         CONFIG_STRATEGY = DO_SAVECW
+      elif value.upper() == "MATCHONLY":
+        CONFIG_MATCHONLY = True
       else:
         print("Invalid preprocessing strategy. Valid options are CORRCOEF,SAD,LOWPASS,SAVEMAT,SAVECW (SAVECW does not need filename)")
         sys.exit(0)
@@ -187,6 +196,7 @@ if __name__ == "__main__":
     sys.exit(0)
   printConfig()
   savedDataIndex = 0
+  discardDataIndex = 0
   df = support.filemanager.load(CONFIG_INFILE)
   if CONFIG_USE_LOWPASS:
     ref = butter_lowpass_filter(df['traces'][CONFIG_REFTRACE],CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
@@ -199,6 +209,9 @@ if __name__ == "__main__":
   traces = zeros((numTraces,sampleCnt),float32)
   data = zeros((numTraces,16),uint8)
   data_out = zeros((numTraces,16),uint8)
+  discard_traces = zeros((numTraces,sampleCnt),float32)
+  discard_data = zeros((numTraces,16),uint8)
+  discard_data_out = zeros((numTraces,16),uint8)
   print("----------------------------------------------------")
   if CONFIG_STRATEGY == USE_MINSAD:
     for i in range(0,len(df['traces'])):
@@ -216,9 +229,17 @@ if __name__ == "__main__":
       if msv < CONFIG_SAD_CUTOFF:
         if msi == -CONFIG_WINDOW_SLIDE or msi == CONFIG_WINDOW_SLIDE - 1:
           print("Index %d, discarding (edge MSI = not found)" % i)
+          if CONFIG_DISCARD:
+            discard_traces[discardDataIndex,:] = x
+            discard_data[discardDataIndex,:] = df['data'][i]
+            discard_data_out[discardDataIndex,:] = df['data_out'][i]
+            discardDataIndex += 1
         else:
           print("Index %d, Minimal SAD Slide %d Samples, Minimal SAD Value %f" % (i,msi,msv))
-          traces[savedDataIndex,:] = roll(x,-msi)      
+          if CONFIG_MATCHONLY:
+            traces[savedDataIndex,:] = x
+          else:
+            traces[savedDataIndex,:] = roll(x,-msi)
           data[savedDataIndex,:] = df['data'][i]
           data_out[savedDataIndex,:] = df['data_out'][i]
           savedDataIndex += 1
@@ -240,9 +261,17 @@ if __name__ == "__main__":
       if msv > CONFIG_MCF_CUTOFF:
         if msi == -CONFIG_WINDOW_SLIDE or msi == CONFIG_WINDOW_SLIDE - 1:
           print("Index %d, discarding (edge Max Coeff Index = not found, mcf is %f)" % (i,msv))
+          if CONFIG_DISCARD:
+            discard_traces[discardDataIndex,:] = x
+            discard_data[discardDataIndex,:] = df['data'][i]
+            discard_data_out[discardDataIndex,:] = df['data_out'][i]
+            discardDataIndex += 1
         else:
           print("Index %d, Max Corr Coeff Slide %d Samples, Max CF Value %f" % (i,msi,msv))
-          traces[savedDataIndex,:] = roll(x,-msi)
+          if CONFIG_MATCHONLY:
+            traces[savedDataIndex,:] = x
+          else:
+            traces[savedDataIndex,:] = roll(x,-msi)
           data[savedDataIndex,:] = df['data'][i]
           data_out[savedDataIndex,:] = df['data_out'][i]
           savedDataIndex += 1
@@ -268,3 +297,6 @@ if __name__ == "__main__":
     sys.exit(0)
   print("Saving %d records" % savedDataIndex)
   support.filemanager.save(CONFIG_OUTFILE,traces=traces[0:savedDataIndex],data=data[0:savedDataIndex],data_out=data_out[0:savedDataIndex])
+  if CONFIG_DISCARD:
+    print("Discard piling %d records" % discardDataIndex)
+    support.filemanager.save(CONFIG_DISCARDPILE,traces=discard_traces[0:discardDataIndex],data=discard_data[0:discardDataIndex],data_out=discardta_out[0:discardDataIndex])

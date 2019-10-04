@@ -79,6 +79,7 @@ def deriveKey(data,plaintexts):
     if CONFIG_PLOT:
       try:
         plt.plot(list(range(0,leakmodel.fragmentMax)),maxcpa)
+        plt.show()
       except:
         print("Fault in plt.plot. CONFIG_PLOT = False")
         CONFIG_PLOT = False
