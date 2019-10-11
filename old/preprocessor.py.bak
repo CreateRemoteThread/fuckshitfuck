@@ -125,8 +125,8 @@ def printHelp():
 def printConfig():
   print("-----------------------------------------------------")
   print(" Preprocessor Configuration:")
-  print((" Input file = %s" % CONFIG_INFILE))
-  print((" Output file = %s" % CONFIG_OUTFILE))
+  print(" Input file = %s" % CONFIG_INFILE)
+  print(" Output file = %s" % CONFIG_OUTFILE)
   if CONFIG_STRATEGY == USE_MAXCORR:
     print(" Strategy: Maximize correlation coefficient")
   elif CONFIG_STRATEGY == USE_MINSAD:
@@ -135,20 +135,20 @@ def printConfig():
     print(" Action: Apply Lowpass and Save")
   if CONFIG_USE_LOWPASS:
     print(" Use Lowpass: yes")
-    print(("   Lowpass Sample Rate: %d Hz" % CONFIG_SAMPLERATE))
-    print(("   Lowpass Cutoff: %d Hz" % CONFIG_CUTOFF))
-    print(("   Lowpass Order: %d" % CONFIG_ORDER))
+    print("   Lowpass Sample Rate: %d Hz" % CONFIG_SAMPLERATE)
+    print("   Lowpass Cutoff: %d Hz" % CONFIG_CUTOFF)
+    print("   Lowpass Order: %d" % CONFIG_ORDER)
   else:
     print(" Use Lowpass: no")
   if CONFIG_STRATEGY in (USE_MAXCORR,USE_MINSAD):
     print(" Window configuration:")
-    print(("   Window offset: %d samples" % CONFIG_WINDOW_OFFSET))
-    print(("   Max slide = %d samples" % CONFIG_WINDOW_SLIDE))
-    print(("   Window length = %d samples" % CONFIG_WINDOW_LENGTH))
+    print("   Window offset: %d samples" % CONFIG_WINDOW_OFFSET)
+    print("   Max slide = %d samples" % CONFIG_WINDOW_SLIDE)
+    print("   Window length = %d samples" % CONFIG_WINDOW_LENGTH)
   if CONFIG_BUCKETSIZE is None:
     print(" No bucket configured")
   else:
-    print((" Bucket size set at %d" % CONFIG_BUCKETSIZE))
+    print(" Bucket size set at %d" % CONFIG_BUCKETSIZE)
   print("-----------------------------------------------------")
 
 if __name__ == "__main__":
@@ -216,8 +216,8 @@ if __name__ == "__main__":
     ref = df['traces'][CONFIG_REFTRACE]
   numTraces = len(df['traces'])
   sampleCnt = len(df['traces'][0])
-  print((" + Sample count is %d" % sampleCnt))
-  print((" + Trace count is %d" % numTraces))
+  print(" + Sample count is %d" % sampleCnt)
+  print(" + Trace count is %d" % numTraces)
   traces = zeros((numTraces,sampleCnt),float32)
   data = zeros((numTraces,16),uint8)
   data_out = zeros((numTraces,16),uint8)
@@ -240,14 +240,14 @@ if __name__ == "__main__":
       (msi,msv) = getMinimalSAD(r2,ref)
       if msv < CONFIG_SAD_CUTOFF:
         if msi == -CONFIG_WINDOW_SLIDE or msi == CONFIG_WINDOW_SLIDE - 1:
-          print(("Index %d, discarding (edge MSI = not found)" % i))
+          print("Index %d, discarding (edge MSI = not found)" % i)
           if CONFIG_DISCARD:
             discard_traces[discardDataIndex,:] = x
             discard_data[discardDataIndex,:] = df['data'][i]
             discard_data_out[discardDataIndex,:] = df['data_out'][i]
             discardDataIndex += 1
         else:
-          print(("Index %d, Minimal SAD Slide %d Samples, Minimal SAD Value %f" % (i,msi,msv)))
+          print("Index %d, Minimal SAD Slide %d Samples, Minimal SAD Value %f" % (i,msi,msv))
           if CONFIG_MATCHONLY:
             traces[savedDataIndex,:] = x
           else:
@@ -256,7 +256,7 @@ if __name__ == "__main__":
           data_out[savedDataIndex,:] = df['data_out'][i]
           savedDataIndex += 1
       else:
-        print(("Index %d, discarding (MSV is %f)" % (i,msv)))
+        print("Index %d, discarding (MSV is %f)" % (i,msv))
   elif CONFIG_STRATEGY == USE_MAXCORR:
     for i in range(0,len(df['traces'])):
       x = df['traces'][i]
@@ -272,14 +272,14 @@ if __name__ == "__main__":
       # (msi,msv) = getMinimalSAD(r2,ref)
       if msv > CONFIG_MCF_CUTOFF:
         if msi == -CONFIG_WINDOW_SLIDE or msi == CONFIG_WINDOW_SLIDE - 1:
-          print(("Index %d, discarding (edge Max Coeff Index = not found, mcf is %f)" % (i,msv)))
+          print("Index %d, discarding (edge Max Coeff Index = not found, mcf is %f)" % (i,msv))
           if CONFIG_DISCARD:
             discard_traces[discardDataIndex,:] = x
             discard_data[discardDataIndex,:] = df['data'][i]
             discard_data_out[discardDataIndex,:] = df['data_out'][i]
             discardDataIndex += 1
         else:
-          print(("Index %d, Max Corr Coeff Slide %d Samples, Max CF Value %f" % (i,msi,msv)))
+          print("Index %d, Max Corr Coeff Slide %d Samples, Max CF Value %f" % (i,msi,msv))
           if CONFIG_MATCHONLY:
             traces[savedDataIndex,:] = x
           else:
@@ -288,7 +288,7 @@ if __name__ == "__main__":
           data_out[savedDataIndex,:] = df['data_out'][i]
           savedDataIndex += 1
       else:
-        print(("Index %d, discarding (correlation is %f, index is %d)" % (i,msv,msi)))
+        print("Index %d, discarding (correlation is %f, index is %d)" % (i,msv,msi))
   elif CONFIG_STRATEGY == DO_LOWPASS:
     for i in range(0,len(df['traces'])):
       x = df['traces'][i]
@@ -300,15 +300,15 @@ if __name__ == "__main__":
       data[i] = df['data'][i]
       data_out[i] = df['data_out'][i]
       savedDataIndex += 1
-      print(("Lowpassed %d" % i))
+      print("Lowpassed %d" % i)
   elif CONFIG_STRATEGY == DO_SAVEMAT:
     support.filemanager.save_mat(CONFIG_OUTFILE,traces=df["traces"],data=df["data"],data_out=df["data_out"])
     sys.exit(0)
   elif CONFIG_STRATEGY == DO_SAVECW:
     support.filemanager.save_cw(df)
     sys.exit(0)
-  print(("Saving %d records" % savedDataIndex))
+  print("Saving %d records" % savedDataIndex)
   support.filemanager.save(CONFIG_OUTFILE,traces=traces[0:savedDataIndex],data=data[0:savedDataIndex],data_out=data_out[0:savedDataIndex])
   if CONFIG_DISCARD:
-    print(("Discard piling %d records" % discardDataIndex))
+    print("Discard piling %d records" % discardDataIndex)
     support.filemanager.save(CONFIG_DISCARDPILE,traces=discard_traces[0:discardDataIndex],data=discard_data[0:discardDataIndex],data_out=discard_data_out[0:discardDataIndex])

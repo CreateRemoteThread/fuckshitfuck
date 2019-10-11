@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Extremely simple signal plotting tool
 
@@ -6,6 +6,7 @@ import sys
 import binascii
 import random
 from scipy.signal import butter,lfilter,freqz
+import scipy.signal
 from numpy import *
 import time
 import getopt
@@ -175,9 +176,10 @@ def usage():
 
 mpl.rcParams['agg.path.chunksize'] = 10000 
 CONFIG_WRITEFILE = None
+SPECIAL_TEST = False
 
 if __name__ == "__main__":
-  opts, remainder = getopt.getopt(sys.argv[1:],"b:s:ahl:n:o:c:r:f:F:w:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft=","highlight=","bandpass="])
+  opts, remainder = getopt.getopt(sys.argv[1:],"tb:s:ahl:n:o:c:r:f:F:w:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft=","highlight=","bandpass=","test"])
   for opt,arg in opts:
     if opt in ("-h","--help"):
       usage()
@@ -198,6 +200,9 @@ if __name__ == "__main__":
       configure_lowpass(arg)
     elif opt in ("-b","--bandpass"):
       configure_bandpass(arg)
+    elif opt in ("-t","--test"):
+      print("SPECIAL TEST MODE")
+      SPECIAL_TEST = True
     elif opt in ("-F","--fft"):
       configure_fft(arg)
     elif opt in ("-w"):
@@ -231,7 +236,13 @@ if __name__ == "__main__":
       if LOWPASS_EN: # this code is disgusting but fuck you
         d = df['traces'][i]
         if OFFSET == 0 and COUNT == 0:
-          plt.plot(butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER))
+          if SPECIAL_TEST:
+            lowpassed_d = butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER)
+            peaks,_ = scipy.signal.find_peaks(lowpassed_d,prominence=[0,0.5],rel_height=0.9)
+            plt.plot(lowpassed_d)
+            plt.plot(peaks,lowpassed_d[peaks],"x")
+          else:
+            plt.plot(butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER))
         else:
           plt.plot(butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER)[OFFSET:OFFSET+COUNT])
       elif BANDPASS_EN:
