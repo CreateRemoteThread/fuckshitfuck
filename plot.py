@@ -39,6 +39,19 @@ def onclick(event):
       print("FROM %d TO %d DIST %d" % (fromX,toX,dist))
       lastX = localX
 
+
+def butter_bandpass(lowcut,highcut,fs,order=5):
+  nyq = 0.5 * fs
+  low = lowcut / nyq
+  high = highcut / nyq
+  b,a = butter(order, [low, high], btype = 'band')
+  return b,a
+
+def butter_bandpass_filter(data,lowcut,highcut,fs,order=5):
+  b,a = butter_bandpass(lowcut,highcut,fs,order=order)
+  y = lfilter(b,a,data)
+  return y
+
 def butter_lowpass(cutoff, fs, order=5):
   nyq = 0.5 * fs
   normal_cutoff = cutoff / nyq
@@ -72,6 +85,12 @@ RULER = []
 TRACES = []
 GAIN_FACTOR =  31622.0
 ADDITIONAL_FILES = []
+
+BANDPASS_LOWCUT=1000000
+BANDPASS_HIGHCUT=5000000
+BANDPASS_SR = 249999999
+BANDPASS_ORDER=1
+BANDPASS_EN = False
 
 LOWPASS_CUTOFF = 10000
 LOWPASS_SR = 40000000
@@ -124,6 +143,20 @@ def configure_lowpass(in_str):
   LOWPASS_EN = True
   TITLE = "Low Pass (%d Hz SR, %d Hz Cutoff)" % (LOWPASS_SR,LOWPASS_CUTOFF)
 
+def configure_bandpass(in_str):
+  global BANDPASS_LOWCUT, BANDPASS_HIGHCUT,BANDPASS_ORDER, BANDPASS_SR, BANDPASS_EN, TITLE
+  try:
+    (lowcut,highcut,samplerate,order) = in_str.split(",")
+  except:
+    print("syntax -b (lowcut,highcut,sr,order)")
+    sys.exit(0)
+  BANDPASS_LOWCUT = float(lowcut)
+  BANDPASS_HIGHCUT = float(highcut)
+  BANDPASS_SR = float(samplerate)
+  BANDPASS_ORDER = int(order)
+  BANDPASS_EN = True
+  TITLE = "Band pass (%d Hz to %d Hz, %d SR)" % (BANDPASS_LOWCUT,BANDPASS_HIGHCUT,BANDPASS_SR)
+
 def usage():
   print(" plot.py : part of the fuckshitfuck toolkit")
   print("----------------------------------------------")
@@ -134,6 +167,7 @@ def usage():
   print(" -f : input npz file (can be multiple)")
   print(" -r : print vertical ruler at point (NOT IMPLEMENTED)")
   print(" -l [cutoff,samplerate,order] : lowpass mode - units in hz")
+  print(" -b [lowcut,highcut,samplerate,order] : bandpass mode - units in hz")
   print(" -F [samplerate] : plot fft, base freq in hz")
   print(" -a : plot average trace")
   print(" -s [samplerate] : plot spectrogram")
@@ -143,7 +177,7 @@ mpl.rcParams['agg.path.chunksize'] = 10000
 CONFIG_WRITEFILE = None
 
 if __name__ == "__main__":
-  opts, remainder = getopt.getopt(sys.argv[1:],"s:ahl:n:o:c:r:f:F:w:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft=","highlight="])
+  opts, remainder = getopt.getopt(sys.argv[1:],"b:s:ahl:n:o:c:r:f:F:w:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft=","highlight=","bandpass="])
   for opt,arg in opts:
     if opt in ("-h","--help"):
       usage()
@@ -162,6 +196,8 @@ if __name__ == "__main__":
       ADDITIONAL_FILES.append(arg)
     elif opt in ("-l","--lowpass"):
       configure_lowpass(arg)
+    elif opt in ("-b","--bandpass"):
+      configure_bandpass(arg)
     elif opt in ("-F","--fft"):
       configure_fft(arg)
     elif opt in ("-w"):
@@ -173,9 +209,12 @@ if __name__ == "__main__":
       sys.exit(0) 
   if CONFIG_WRITEFILE is not None:
     mpl.use("Agg")
+  if LOWPASS_EN and BANDPASS_EN:
+    print("You can't have both lowpass and bandpass filters (yet!)")
+    sys.exit(0)
   import matplotlib.pyplot as plt
-  if [FFT_EN, LOWPASS_EN, AVG_EN, SPECGRAM_EN].count(True) > 1:
-    print("You can only select one of -F (FFT), -l (LOWPASS) or -a (AVERAGE)")
+  if [FFT_EN, LOWPASS_EN, AVG_EN, SPECGRAM_EN, BANDPASS_EN].count(True) > 1:
+    print("You can only select one of -F (FFT), -l (LOWPASS) or -a (AVERAGE), -b (BANDPASS)")
     sys.exit(0)
   if SPECGRAM_EN == False:
     fig, ax1 = plt.subplots()
@@ -191,6 +230,8 @@ if __name__ == "__main__":
         d = df['traces'][i][OFFSET:OFFSET + COUNT]
       if LOWPASS_EN:
         plt.plot(butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER))
+      elif BANDPASS_EN:
+        plt.plot(butter_bandpass_filter(d,BANDPASS_LOWCUT,BANDPASS_HIGHCUT,BANDPASS_SR,BANDPASS_ORDER))
       elif FFT_EN:
         n = len(d)
         k = arange(n)

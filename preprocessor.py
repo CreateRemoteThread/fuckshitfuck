@@ -7,6 +7,17 @@ import getopt
 import sys
 import support.filemanager
 
+def butter_bandpass(lowcut,highcut,fs,order=5):
+  nyq = 0.5 * fs
+  low = lowcut / nyq
+  high = highcut / nyq
+  b,a = butter(order, [low, high], btype = 'band')
+
+def butter_bandpass_filter(data,lowcut,highcut,fs,order=5):
+  b,a = butter_bandpass(lowcut,highcut,fs,order=order)
+  y = lfilter(b,a,data)
+  return y
+
 def butter_lowpass(cutoff, fs, order=5):
   nyq = 0.5 * fs
   normal_cutoff = cutoff / nyq
@@ -104,6 +115,7 @@ def printHelp():
   print(" -c <cutoff> : specify max SAD cutoff OR min correlation coeff cutoff")
   print("             : everything not matching this is discarded!!!!")
   print(" -l <cutoff,samplerate,order> : lowpass before preprocessing")
+  # print(" -b <lowcut,highcut,samplerate,order> : bandpass before preprocessing")
   print(" --window-offset <offset> : offset of window to match in samples")
   print(" --window-length <length> : length of window to match in samples")
   print(" --window-slide <maxslide> : max num of samples to slide the window to search for a match")
