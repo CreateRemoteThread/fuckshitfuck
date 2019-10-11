@@ -228,10 +228,18 @@ if __name__ == "__main__":
         d = df['traces'][i]
       else:
         d = df['traces'][i][OFFSET:OFFSET + COUNT]
-      if LOWPASS_EN:
-        plt.plot(butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER))
+      if LOWPASS_EN: # this code is disgusting but fuck you
+        d = df['traces'][i]
+        if OFFSET == 0 and COUNT == 0:
+          plt.plot(butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER))
+        else:
+          plt.plot(butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER)[OFFSET:OFFSET+COUNT])
       elif BANDPASS_EN:
-        plt.plot(butter_bandpass_filter(d,BANDPASS_LOWCUT,BANDPASS_HIGHCUT,BANDPASS_SR,BANDPASS_ORDER))
+        d = df['traces'][i]
+        if OFFSET == 0 and COUNT == 0:
+          plt.plot(butter_bandpass_filter(d,BANDPASS_LOWCUT,BANDPASS_HIGHCUT,BANDPASS_SR,BANDPASS_ORDER))
+        else:
+          plt.plot(butter_bandpass_filter(d,BANDPASS_LOWCUT,BANDPASS_HIGHCUT,BANDPASS_SR,BANDPASS_ORDER)[OFFSET:OFFSET+COUNT])
       elif FFT_EN:
         n = len(d)
         k = arange(n)
