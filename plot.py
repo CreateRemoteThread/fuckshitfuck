@@ -238,9 +238,11 @@ if __name__ == "__main__":
         if OFFSET == 0 and COUNT == 0:
           if SPECIAL_TEST:
             lowpassed_d = butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER)
-            peaks,_ = scipy.signal.find_peaks(lowpassed_d,prominence=[0,0.5],rel_height=0.9)
+            std_dev = std(lowpassed_d)
+            avg_dev = average(lowpassed_d)
+            # peaks,_ = scipy.signal.find_peaks(lowpassed_d,prominence=[0,0.5],rel_height=0.9)
             plt.plot(lowpassed_d)
-            plt.plot(peaks,lowpassed_d[peaks],"x")
+            # plt.plot(peaks,lowpassed_d[peaks],"x")
           else:
             plt.plot(butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER))
         else:
