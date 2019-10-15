@@ -6,17 +6,20 @@ The fuckshitfuck toolkit is a repository of code used for side channel acquisiti
 
 This toolkit comprises:
 
-- Acquisition:
-  - ./grab3.py, for acquisition from picoscope scopes
-  - ./rigol-new.py, for acquisition from rigol scopes
-  - ./grab-smartcard.py, for pcsc+picoscope acquisition from smartcards
-- Preprocessing:
-  - ./preprocessor.py, for temporal alignment of traces
-- Analysis:
-  - ./cpa.py, a multi-model tool for correlation analysis
-  - ./dpa.py, a multi-model tool for differential analysis
-  - ./plot.py, a simple matplotlib-based tool to view sets of traces
-  - ./tlva.py, an implementation of non-specific welch's t-test leak detector
+- Normal Side Channels:
+  - Acquisition:
+    - ./grab3.py, for acquisition from picoscope scopes
+    - ./rigol-new.py, for acquisition from rigol scopes
+    - ./grab-smartcard.py, for pcsc+picoscope acquisition from smartcards
+  - Preprocessing:
+    - ./preprocessor.py, for temporal alignment of traces
+  - Analysis:
+    - ./cpa.py, a multi-model tool for correlation analysis
+    - ./dpa.py, a multi-model tool for differential analysis
+    - ./plot.py, a simple matplotlib-based tool to view sets of traces
+    - ./tlva.py, an implementation of non-specific welch's t-test leak detector
+- Keyboards:
+  - ./y/a.py, an EM leakage and peak detection tool for keyboard scan matrices
 
 Note the correlation and differential analysis front-ends are now decoupled from the leakage modelling back-ends - models can be found in support/attack.py. cpa.py and dpa.py typically do not need to be changed to analyze traces using different leakage hypotheses.
 

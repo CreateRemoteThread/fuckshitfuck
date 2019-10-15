@@ -17,6 +17,10 @@ sampledata/
 **/*.npz
 *.npz
 
+# fucken lol
+**/*.npy
+y/*.png
+
 # C extensions
 *.so
 
