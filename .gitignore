@@ -5,7 +5,14 @@ __pycache__/
 
 *.swp
 # when i need to plot in ./
-*.png
+# *.png
+1.png
+lol.png
+fuck.png
+2.png
+y/images/*
+y/saves/*
+y/badsamples/*
 
 captures*/
 set*/

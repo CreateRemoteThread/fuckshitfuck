@@ -5,6 +5,7 @@ import sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import glob
 
 SND_NORMAL_WAIT = 60000
 SND_NORMAL_ACTIVE = 20000
@@ -133,11 +134,26 @@ def test_discard_usb():
         bucket_processed.append( int(data[i] - avg_spike) )
     print("AVGNML: %d AVGSPK: %d BUCKET: %s" % (int(avg_normal), int(avg_spike), str(bucket_processed)) )
 
+def test_fft():
+  p = glob.glob("saves/*.npy")
+  i = 0
+  for fn in p:
+    data = np.load(fn)
+    x = np.fft.fft(data)
+    plt.clf()
+    plt.plot(x)
+    plt.savefig("images/%d.png" % i)
+    i += 1
+    print("Saving %d" % i)
+
 lastIndex = 0
 if __name__ == "__main__":
   if len(sys.argv) == 2:
     if sys.argv[1] == "normalize":
       test_discard_usb()
+      sys.exit(0)
+    elif sys.argv[1] == "fft":
+      test_fft()
       sys.exit(0)
     data = np.load(sys.argv[1])
     lm = find_local_maxima(data)
@@ -151,7 +167,6 @@ if __name__ == "__main__":
     print(map_delay(d2))
     sys.exit(0)
   else:
-    import glob
     i = 0
     for x in glob.glob("saves/*.npy"):
       data = np.load(x)

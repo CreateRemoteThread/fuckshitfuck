@@ -47,6 +47,9 @@ if __name__ == "__main__":
     if x == []:
       np.save("badsamples/%d.npy" % i,data)
       i += 1
+    else:
+      np.save("saves/%d.npy" % i,data)
+      i += 1
     lol2 = support.map_delay(x)
     print(lol2)
     if CONFIG_CAPTURES == None:
