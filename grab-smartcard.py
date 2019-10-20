@@ -95,7 +95,7 @@ def usage():
 CONFIG_SAMPLERATE = 64000000
 CONFIG_SAMPLECOUNT = 500000
 CONFIG_TRACECOUNT = 1000
-CONFIG_ANALOGOFFSET = -0.04
+CONFIG_ANALOGOFFSET = -0.01
 CONFIG_WRITEFILE = "%s.npz" % uuid.uuid4()
 CONFIG_TLVA = False
 VRANGE_PRIMARY = 0.05
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     data_out = np.zeros((CONFIG_TRACECOUNT,16),np.uint8)     # AUTN
     print(" >> Initializing picoscope")
     ps = ps2000a.PS2000a()
-    ps.setChannel('A','DC',VRange=VRANGE_PRIMARY,VOffset=CONFIG_ANALOGOFFSET,enabled=True,BWLimited=False)
+    ps.setChannel('A','AC',VRange=VRANGE_PRIMARY,VOffset=CONFIG_ANALOGOFFSET,enabled=True,BWLimited=False)
     ps.setChannel('B','DC',VRange=7.0,VOffset=0.0,enabled=True,BWLimited=False)
     nSamples = CONFIG_SAMPLECOUNT
     (freq,maxSamples) = ps.setSamplingFrequency(CONFIG_SAMPLERATE,nSamples)
