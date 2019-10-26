@@ -22,7 +22,8 @@ This toolkit comprises:
     - ./plot.py, a simple matplotlib-based tool to view sets of traces
     - ./tlva.py, an implementation of non-specific welch's t-test leak detector
 - Keyboards:
-  - ./y/a.py, an EM leakage and peak detection tool for keyboard scan matrices
+  - ./y/a.py, an EM leakage capture tool
+  - ./y/support.py, analysis tool for the output of a.py
 
 Note the correlation and differential analysis front-ends are now decoupled from the leakage modelling back-ends - models can be found in support/attack.py. cpa.py and dpa.py typically do not need to be changed to analyze traces using different leakage hypotheses.
 

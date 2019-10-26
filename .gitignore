@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# training data + captures
+y/toothpicks/*
+y/floss/*
+
 *.swp
 # when i need to plot in ./
 # *.png
