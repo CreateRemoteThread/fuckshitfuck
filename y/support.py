@@ -9,7 +9,7 @@ import getopt
 import glob
 
 CONFIG_PEAK_IDENTIFY = 0.2
-CONFIG_MAX_PULSEWIDTH = 40000
+CONFIG_MAX_PULSEWIDTH = 20000
 
 def specialk(val):
   if val < 0.02:
