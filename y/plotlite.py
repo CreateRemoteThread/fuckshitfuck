@@ -24,8 +24,16 @@ if __name__ == "__main__":
     print("usage: ./plotlite.py <savegame>")
     sys.exit(0)
   data = np.load(sys.argv[1])
-  # d_filtered = butter_lowpass_filter(data,60000,60000000,1)
-  plt.plot(abs(data))
-  plt.show()
-  # plt.savefig("lol.png")
+  if len(data) == 2:
+    plt.subplot(2,1,1)
+    plt.title("Channel A")
+    plt.plot(abs(data[0]))
+    plt.subplot(2,1,2)
+    plt.title("Channel B")
+    plt.plot(abs(data[1]))
+    plt.show()
+  else:
+    plt.title("Channel A")
+    plt.plot(data)
+    plt.show()
   

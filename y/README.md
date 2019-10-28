@@ -2,6 +2,8 @@
 
 ![Just for fun](../fun/keypress-cropped.png)
 
-*This is a keylogger. There are few others like it, but this one is mine.*
-
 This sub-toolkit is for capturing the EM emissions from a keyboard, similar to the work of Martin Vuagnoux and Sylvaini Pasini (see: lasecwww.epfl.ch/keyboard), and further expanded on in "SoK: Keylogging Side Channels" (see: ieeexplore.ieee.org/document/8418605).
+
+Note that we do not rely on delay - instead, we rely on the shape and duration of electromagnetic emissions.
+
+This is the TWINLINKED branch, for use with two measurement coils - the one with the sticker goes on the right, shielding foil faces downward. Tested against J Burrows keyboard.

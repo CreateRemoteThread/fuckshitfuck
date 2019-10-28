@@ -9,7 +9,7 @@ import getopt
 import glob
 
 CONFIG_PEAK_IDENTIFY = 0.2
-CONFIG_MAX_PULSEWIDTH = 20000
+CONFIG_MAX_PULSEWIDTH = 70000
 
 def specialk(val):
   if val < 0.02:
@@ -29,6 +29,46 @@ def findLocalMaxima(data):
       i += 1000
     i += 1
   return localMaxima
+
+def convertFromHashmap(coeffs):
+  c_list = []
+  for k in coeffs.keys():
+    c_list.append( (k,coeffs[k]) )
+  c_list.sort(key=lambda tup:tup[1])
+  return c_list[::-1]
+
+def twoOfThree_logWeight(f_in):
+  if f_in > 0.95:
+    return f_in * 2
+  elif f_in < 0.5:
+    return f_in * 0.5
+  else:
+    return f_in
+
+def twoOfThree_twinlinked(unknown,alignment):
+  lm = findLocalMaxima(unknown[0])
+  maxCorr = {}
+  for local_max in lm:
+    dataA = unknown[0][local_max:local_max + CONFIG_MAX_PULSEWIDTH]
+    dataB = unknown[1][local_max:local_max + CONFIG_MAX_PULSEWIDTH]
+    for k in alignment.keys():
+      (alignData,alignMax) = alignment[k]
+      for align_max in alignMax:
+        alignA = alignData[0][align_max:align_max + CONFIG_MAX_PULSEWIDTH]
+        alignB = alignData[1][align_max:align_max + CONFIG_MAX_PULSEWIDTH]
+        lcorrA = np.corrcoef(dataA,alignA)[0,1]
+        lcorrB = np.corrcoef(dataB,alignB)[0,1]
+        if k in maxCorr.keys():
+          maxCorr[k] += twoOfThree_logWeight(lcorrA) + twoOfThree_logWeight(lcorrB)
+        else:
+          maxCorr[k] = twoOfThree_logWeight(lcorrA) + twoOfThree_logWeight(lcorrB)
+  maxCorrCoef = 0
+  maxKey = ""
+  for k in maxCorr.keys():
+    if maxCorr[k] > maxCorrCoef:
+      maxCorrCoef = maxCorr[k]
+      maxKey = k
+  return (maxKey,maxCorr)
 
 def twoOfThree(unknown,alignment):
   lm = findLocalMaxima(unknown)
@@ -88,7 +128,7 @@ if __name__ == "__main__":
     fname = f.replace("toothpicks/","")
     fname = fname.replace(".npy","")
     fx = np.load(f)
-    localMaxima = findLocalMaxima(fx)
+    localMaxima = findLocalMaxima(fx[0])
     alignment[fname] = (fx,localMaxima)
     print("+ Loaded alignment table for %s" % fname)
   if CONFIG_FILENAME is None:
@@ -96,9 +136,10 @@ if __name__ == "__main__":
     flist.sort()
     for f in flist:
       data = np.load(f)
-      (s,maxCorr) = twoOfThree(data,alignment)
-      print("I think %s is %s" % (f,s))
+      (s,maxCorr) = twoOfThree_twinlinked(data,alignment)
+      mc = convertFromHashmap(maxCorr)
+      print(mc[0:3])
   else:
     data = np.load(CONFIG_FILENAME)
-    (k,maxCorr) = twoOfThree(data,alignment)
+    (k,maxCorr) = twoOfThree_twinlinked(data,alignment)
     print("I think %s is %s" % (CONFIG_FILENAME,k))

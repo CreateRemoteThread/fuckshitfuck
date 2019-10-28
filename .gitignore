@@ -6,6 +6,8 @@ __pycache__/
 # training data + captures
 y/toothpicks/*
 y/floss/*
+y/mouthwash/*
+y/mouthwash-j/*
 
 *.swp
 # when i need to plot in ./
