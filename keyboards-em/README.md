@@ -6,4 +6,4 @@ This sub-toolkit is for capturing the EM emissions from a keyboard, similar to t
 
 Note that we do not rely on delay - instead, we rely on the shape and duration of electromagnetic emissions.
 
-This is the TWINLINKED branch, for use with two measurement coils - the one with the sticker goes on the right, shielding foil faces downward. Tested against J Burrows keyboard.
+This directory uses dual channel measurement by default, to improve the accuracy of any correlation attacks.
