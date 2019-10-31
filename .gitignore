@@ -4,10 +4,10 @@ __pycache__/
 *$py.class
 
 # training data + captures
-y/toothpicks/*
-y/floss/*
-y/mouthwash/*
-y/mouthwash-j/*
+keyboards/toothpicks/*
+keyboards/floss/*
+keyboards/mouthwash/*
+keyboards/mouthwash-j/*
 
 *.swp
 # when i need to plot in ./
@@ -16,9 +16,9 @@ y/mouthwash-j/*
 lol.png
 fuck.png
 2.png
-y/images/*
-y/saves/*
-y/badsamples/*
+keyboards/images/*
+keyboards/saves/*
+keyboards/badsamples/*
 
 captures*/
 set*/
@@ -32,7 +32,7 @@ sampledata/
 
 # fucken lol
 **/*.npy
-y/*.png
+keyboards/*.png
 
 # C extensions
 *.so
