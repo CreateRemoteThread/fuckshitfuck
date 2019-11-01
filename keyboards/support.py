@@ -2,14 +2,17 @@
 
 import numpy as np
 import sys
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import getopt
 import glob
+from scipy import signal
 
 CONFIG_PEAK_IDENTIFY = 0.2
-CONFIG_MAX_PULSEWIDTH = 70000
+CONFIG_MAX_PULSEWIDTH = 75000
+
+def block_preprocess_function(dslice):
+  fx,Pxx_spec = signal.welch(dslice,124999999,'flattop',1024,scaling='spectrum')
+  return np.sqrt(Pxx_spec)
+  # return dslice
 
 def specialk(val):
   if val < 0.02:
@@ -38,7 +41,9 @@ def convertFromHashmap(coeffs):
   return c_list[::-1]
 
 def twoOfThree_logWeight(f_in):
+  # return f_in
   if f_in > 0.95:
+    # print("Extremely strong match")
     return f_in * 2
   elif f_in < 0.5:
     return f_in * 0.5
@@ -49,13 +54,13 @@ def twoOfThree_twinlinked(unknown,alignment):
   lm = findLocalMaxima(unknown[0])
   maxCorr = {}
   for local_max in lm:
-    dataA = unknown[0][local_max:local_max + CONFIG_MAX_PULSEWIDTH]
-    dataB = unknown[1][local_max:local_max + CONFIG_MAX_PULSEWIDTH]
+    dataA = block_preprocess_function(unknown[0][local_max:local_max + CONFIG_MAX_PULSEWIDTH])
+    dataB = block_preprocess_function(unknown[1][local_max:local_max + CONFIG_MAX_PULSEWIDTH])
     for k in alignment.keys():
       (alignData,alignMax) = alignment[k]
       for align_max in alignMax:
-        alignA = alignData[0][align_max:align_max + CONFIG_MAX_PULSEWIDTH]
-        alignB = alignData[1][align_max:align_max + CONFIG_MAX_PULSEWIDTH]
+        alignA = block_preprocess_function(alignData[0][align_max:align_max + CONFIG_MAX_PULSEWIDTH])
+        alignB = block_preprocess_function(alignData[1][align_max:align_max + CONFIG_MAX_PULSEWIDTH])
         lcorrA = np.corrcoef(dataA,alignA)[0,1]
         lcorrB = np.corrcoef(dataB,alignB)[0,1]
         if k in maxCorr.keys():
@@ -68,37 +73,6 @@ def twoOfThree_twinlinked(unknown,alignment):
     if maxCorr[k] > maxCorrCoef:
       maxCorrCoef = maxCorr[k]
       maxKey = k
-  return (maxKey,maxCorr)
-
-def twoOfThree(unknown,alignment):
-  lm = findLocalMaxima(unknown)
-  maxCorr = {}
-  for local_max in lm:
-    data = unknown[local_max:local_max+CONFIG_MAX_PULSEWIDTH]
-    data = list(map(specialk,abs(data)))
-    for k in alignment.keys():
-      (alignData,alignMaxima) = alignment[k]
-      for align_max in alignMaxima:
-        align_slice = alignData[align_max:align_max+CONFIG_MAX_PULSEWIDTH]
-        align_slice = list(map(specialk,abs(align_slice)))
-        # print("Matching: %d %d" % (len(data),len(align_slice)))
-        lcorr = np.corrcoef(data,align_slice)[0,1]
-        # if lcorr > 0.8:
-        #   print("Strong match on %s: %f" % (k,lcorr))
-        # else:
-        #   print("Poor match on %s: %f" % (k,lcorr))
-        if k in maxCorr.keys():
-          maxCorr[k] += lcorr
-        else:
-          maxCorr[k] = lcorr
-  maxCorrCoef = 0
-  maxKey = ""
-  for k in maxCorr.keys():
-    # print("Combined 2of3 correlation for %s is %f" % (k,maxCorr[k]))
-    if maxCorr[k] > maxCorrCoef:
-      maxCorrCoef = maxCorr[k]
-      maxKey = k
-  # print("I think the key is %s" % maxKey)
   return (maxKey,maxCorr)
 
 CONFIG_FILENAME = None
@@ -138,7 +112,7 @@ if __name__ == "__main__":
       data = np.load(f)
       (s,maxCorr) = twoOfThree_twinlinked(data,alignment)
       mc = convertFromHashmap(maxCorr)
-      print(mc[0:3])
+      print(mc[0:6])
   else:
     data = np.load(CONFIG_FILENAME)
     (k,maxCorr) = twoOfThree_twinlinked(data,alignment)
