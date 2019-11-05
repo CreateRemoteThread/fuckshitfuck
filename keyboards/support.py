@@ -6,7 +6,8 @@ import getopt
 import glob
 from scipy import signal
 
-CONFIG_PEAK_IDENTIFY = 0.2
+CONFIG_THRESHOLD = 0.15
+CONFIG_PEAK_IDENTIFY = CONFIG_THRESHOLD
 CONFIG_MAX_PULSEWIDTH = 75000
 
 def block_preprocess_function(dslice):
@@ -23,28 +24,15 @@ def specialk(val):
 # CONFIG_LOWPEAK_IDENTIFY = 0.02
 CONFIG_LOWPEAK_BACKOFF = 100
 
-# finds the little spikes. pass in a block of array.
-def findReallyLocalMaxima(data):
-  localMaxima = []
-  i = 0
-  firstDelta = None
-  stddev = np.std(data)
-  wavemean = np.mean(data)
-  while i < len(data):
-    if data[i] > (wavemean + 2 * stddev):
-      if i + CONFIG_LOWPEAK_BACKOFF > len(data):
-        print("findReallyLocalMaxima(): ending peak detection early")
-        break
-      # print("%d,%s" % (i,firstDelta))
-      if firstDelta is None:
-        print(i)
-        firstDelta = i
-        localMaxima.append( (0,max(data[i:i+CONFIG_LOWPEAK_BACKOFF])) )
-      else:
-        localMaxima.append( (i - firstDelta,max(data[i:i+CONFIG_LOWPEAK_BACKOFF])) )
-      i += CONFIG_LOWPEAK_BACKOFF
-    i += 1
-  return localMaxima
+def findReallyLocalMaxima(c0,relativePeaks=True):
+  peaks,props = signal.find_peaks(c0,height=np.percentile(c0,99.95),distance=150)
+  if len(peaks) == 0:
+    print("findReallyLocalMaxima: no peaks detected?")
+    sys.exit(0)
+  firstPeak = peaks[0]
+  if relativePeaks is False:
+    firstPeak = 0
+  return [(p-firstPeak,c0[p]) for p in peaks]
 
 # finds the big spikes. use this first.
 def findLocalMaxima(data):

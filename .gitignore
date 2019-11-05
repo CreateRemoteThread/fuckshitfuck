@@ -5,6 +5,7 @@ __pycache__/
 
 # training data + captures
 keyboards/toothpicks/*
+keyboards/floss-pawpaw/*
 keyboards/floss-password/*
 keyboards/floss-papaya/*
 keyboards/floss/*
