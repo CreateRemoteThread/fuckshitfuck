@@ -20,40 +20,13 @@ def specialk(val):
   else:
     return val
 
-# CONFIG_LOWPEAK_IDENTIFY = 0.02
-CONFIG_LOWPEAK_BACKOFF = 100
-
-# finds the little spikes. pass in a block of array.
-def findReallyLocalMaxima(data):
-  localMaxima = []
-  i = 0
-  firstDelta = None
-  stddev = np.std(data)
-  wavemean = np.mean(data)
-  while i < len(data):
-    if data[i] > (wavemean + 2 * stddev):
-      if i + CONFIG_LOWPEAK_BACKOFF > len(data):
-        print("findReallyLocalMaxima(): ending peak detection early")
-        break
-      # print("%d,%s" % (i,firstDelta))
-      if firstDelta is None:
-        print(i)
-        firstDelta = i
-        localMaxima.append( (0,max(data[i:i+CONFIG_LOWPEAK_BACKOFF])) )
-      else:
-        localMaxima.append( (i - firstDelta,max(data[i:i+CONFIG_LOWPEAK_BACKOFF])) )
-      i += CONFIG_LOWPEAK_BACKOFF
-    i += 1
-  return localMaxima
-
-# finds the big spikes. use this first.
 def findLocalMaxima(data):
   localMaxima = []
   i = 0
   while i < len(data):
     if data[i] >= CONFIG_PEAK_IDENTIFY:
       if i + CONFIG_MAX_PULSEWIDTH > len(data):
-        print("findLocalMaxima(): ending peak detection early")
+        print("findLocalMaxima(): ending peak detection")
         break
       localMaxima.append(i)
       i += 1000
@@ -162,5 +135,55 @@ def correlate_spectra(data_in,training):
   print(max(focuses.items(), key=lambda item: item[1]))
   return
 
+def usage():
+  print("to TRAIN: put training samples in toothpicks/, and use -t <npy> to create a training db")
+  print("to MATCH: specify real sample location with -f floss-papaya, and use -t <npy> to specify a training db")
+  sys.exit(0)
+
 if __name__ == "__main__":
-  print("support.py - don't call this directly")
+  print("support.py post-processing tool")
+  optlist,args = getopt.getopt(sys.argv[1:],"hf:t:",["help","file=","train="])
+  for opt, arg in optlist:
+    if opt in ("-h","--help"):
+      usage()
+    elif opt in ("-f","--file"):
+      CONFIG_FILENAME = arg
+    elif opt in ("-t","--train"):
+      CONFIG_TRAIN = arg
+  if CONFIG_TRAIN is None:
+    print("You must specify a dataset npz. Exiting...")
+    sys.exit(0)
+  if CONFIG_FILENAME is None:
+    prefixes = []
+    df = glob.glob("toothpicks/*-0.npy")
+    for fn in df:
+      fn_raw = fn.replace("toothpicks/","")
+      fn_prefix = fn_raw.split("-")[0]
+      prefixes.append(fn_prefix)
+    out_spectra = []
+    for pf in prefixes:
+      df = glob.glob("toothpicks/%s-*.npy" % pf)
+      for fn in df:
+        data = np.load(fn)
+        out_spectra += [(pf,extract_2channel_spectrum(data))]
+    print("Saving spectral mask %s" % CONFIG_TRAIN)
+    print(len(out_spectra))
+    np.save(CONFIG_TRAIN,out_spectra)
+  else:
+    in_spectra = np.load(CONFIG_TRAIN)
+    print("Spectral mask %s loaded" % CONFIG_TRAIN)
+    # this expects files in the format %d %d %d
+    bCont = True
+    i = 0
+    while bCont is True:
+      try:
+        fn = "%s/%d.npy" % (CONFIG_FILENAME,i)
+        d = np.load(fn)
+      except:
+        print("Could not open %s" % fn)
+        bCont = False
+        continue
+      print("Loaded %s" % fn)
+      # correlate_spectra(d,in_spectra)
+      correlate_spectra_minsad(d,in_spectra)
+      i += 1

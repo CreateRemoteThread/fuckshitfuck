@@ -10,6 +10,8 @@ keyboards/floss-papaya/*
 keyboards/floss/*
 keyboards/mouthwash/*
 keyboards/mouthwash-j/*
+keyboards/TEST-*
+keyboards/trainset.npy
 
 *.swp
 # when i need to plot in ./

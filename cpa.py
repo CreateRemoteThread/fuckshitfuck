@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Version 2 - Multi-model Correlation Attack Script
 # ========================================================================
@@ -61,6 +61,7 @@ def deriveKey(data,plaintexts):
         hyp[tnum] = leakmodel.genIVal(tnum,bnum,kguess) # bin(desManager[tnum].generateSbox(bnum,kguess)).count("1")
       meanh = np.mean(hyp,dtype=np.float64)
       meant = np.mean(data,axis=0,dtype=np.float64)[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
+      print(meant)
       for tnum in range(0,trace_count):
         hdiff = (hyp[tnum] - meanh)
         tdiff = data[tnum,TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH] - meant
@@ -78,8 +79,9 @@ def deriveKey(data,plaintexts):
       maxcpa[kguess] = max(abs(cpaoutput[kguess]))
     if CONFIG_PLOT:
       try:
-        plt.plot(list(range(0,leakmodel.fragmentMax)),maxcpa)
-        plt.show()
+        pass
+        # plt.plot(list(range(0,leakmodel.fragmentMax)),maxcpa)
+        # plt.show()
       except:
         print("Fault in plt.plot. CONFIG_PLOT = False")
         CONFIG_PLOT = False

@@ -24,6 +24,11 @@ def convert(fn):
   save(BASENAME,df["traces"],df["data"],df["data_out"])
   os.remove(fn)
 
+def fetch_trace(dataObj=None):
+  if dataObj is None:
+    print("Nope: you must call this with the original data object")
+    sys.exit(0)
+
 def save_mat(fn_,traces=None,data=None,data_out=None,freq=None):
   scipy.io.savemat(fn_,{"traces":traces,"textin":data,"textout":data,"key":[]})
 
