@@ -21,8 +21,11 @@ fig = None
 def redraw_plots():
   global CONFIG_FPREFIX,STATE_POSN,ax1,fig,current_guess,ax2
   ax1.cla()
+  ax2.cla()
   cg_val = current_guess.get()
-  cg_all = glob.glob("toothpicks/%s-*.npy" % cg_val)
+  if "-" not in cg_val:
+    cg_val = cg_val + "-"
+  cg_all = glob.glob("toothpicks/%s*.npy" % cg_val)
   if len(cg_all) == 0 and cg_val != "None":
     print("No toothpick for %s" % cg_val)
   for fn in cg_all:
@@ -68,8 +71,6 @@ def start(data_array,fprefix):
   # because computers make sense.
   ax1 = fig.add_subplot(211)
   ax2 = fig.add_subplot(212)
-  ax1.set_ylim([0,0.5])
-  ax2.set_ylim([0,0.5])
   ctrl_frame = Frame(top)
   button_prev_sample = Button(ctrl_frame,text="<",command=prev_sample)
   button_prev_sample.pack(side=LEFT)
