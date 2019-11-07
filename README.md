@@ -23,7 +23,10 @@ This toolkit comprises:
     - ./tlva.py, an implementation of non-specific welch's t-test leak detector
 - Keyboards:
   - ./keyboards-em/a.py, an EM leakage capture tool
-  - ./keyboards-em/support.py, analysis tool for the output of a.py
+  - ./classifier-train.py, which forms a training npy out of captured samples
+  - ./classifier-read.py, which matches training data against an input sample
+  - ./plotlite.py, a tool for plotting a single trace
+  - ./plot_overlay.py, a tool for plotting multiple overlaid traces
 
 Note the correlation and differential analysis front-ends are now decoupled from the leakage modelling back-ends - models can be found in support/attack.py. cpa.py and dpa.py typically do not need to be changed to analyze traces using different leakage hypotheses.
 

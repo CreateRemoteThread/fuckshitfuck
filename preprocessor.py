@@ -40,6 +40,8 @@ CONFIG_REFTRACE = 0
 # how big is your window
 CONFIG_WINDOW_OFFSET = 103628
 CONFIG_WINDOW_LENGTH = 44355
+CONFIG_CLKADJUST = 10000
+CONFIG_CLKADJUST_MAX = 0
 CONFIG_WINDOW_SLIDE = 5000
 CONFIG_SAD_CUTOFF = 3.2
 CONFIG_MCF_CUTOFF = 0.9
@@ -70,21 +72,29 @@ def getMaxCorrCoeff(trace1,trace2):
   maxCfIndex = 0
   # print(trace1[0:10])
   # print(trace2[0:10])
-  for i in range(0,CONFIG_WINDOW_SLIDE):
-    r1 = trace1[CONFIG_WINDOW_OFFSET + i:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH + i]
-    r2 = trace2[CONFIG_WINDOW_OFFSET:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH]
-    r = corrcoef(r1,r2)
-    if r[0,1] > maxCf:
-      maxCf = r[0,1]
-      maxCfIndex = i
-  for i in range(-CONFIG_WINDOW_SLIDE,0):
-    r1 = trace1[CONFIG_WINDOW_OFFSET + i:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH + i]
-    r2 = trace2[CONFIG_WINDOW_OFFSET:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH]
-    r = corrcoef(r1,r2)
-    # print(r)
-    if r[0,1] > maxCf:
-      maxCf = r[0,1]
-      maxCfIndex = i
+  for cadjust in range(0,CONFIG_CLKADJUST_MAX + 1):
+    if cadjust == 0:
+      cAdjustNeg = [0]
+    else:
+      cAdjustNeg = [cadjust * CONFIG_CLKADJUST, -cadjust * CONFIG_CLKADJUST]
+    for LOCAL_CLOCKADJUST in cAdjustNeg:
+      for i in range(0,CONFIG_WINDOW_SLIDE):
+        i += LOCAL_CLOCKADJUST
+        r1 = trace1[CONFIG_WINDOW_OFFSET + i:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH + i]
+        r2 = trace2[CONFIG_WINDOW_OFFSET:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH]
+        r = corrcoef(r1,r2)
+        if r[0,1] > maxCf:
+          maxCf = r[0,1]
+          maxCfIndex = i
+      for i in range(-CONFIG_WINDOW_SLIDE,0):
+        i += LOCAL_CLOCKADJUST
+        r1 = trace1[CONFIG_WINDOW_OFFSET + i:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH + i]
+        r2 = trace2[CONFIG_WINDOW_OFFSET:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH]
+        r = corrcoef(r1,r2)
+        # print(r)
+        if r[0,1] > maxCf:
+          maxCf = r[0,1]
+          maxCfIndex = i
   return (maxCf,maxCfIndex)
  
 def getMinimalSAD(trace1,trace2):
@@ -92,17 +102,25 @@ def getMinimalSAD(trace1,trace2):
   minimalSADIndex = 0.0
   # print(trace1[0:10])
   # print(trace2[0:10])
-  for i in range(0,CONFIG_WINDOW_SLIDE):
-    ms = getSingleSAD(trace1[CONFIG_WINDOW_OFFSET + i:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH + i],trace2[CONFIG_WINDOW_OFFSET:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH])
-    if ms < minimalSAD:
-      minimalSAD = ms
-      minimalSADIndex = i
-  for i in range(-CONFIG_WINDOW_SLIDE,0):
-    if CONFIG_WINDOW_OFFSET + i > 0:
-      ms = getSingleSAD(trace1[CONFIG_WINDOW_OFFSET + i:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH + i],trace2[CONFIG_WINDOW_OFFSET:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH])
-      if ms < minimalSAD:
-        minimalSAD = ms
-        minimalSADIndex = i
+  for cadjust in range(0,CONFIG_CLKADJUST_MAX + 1):
+    if cadjust == 0:
+      cAdjustNeg = [0]
+    else:
+      cAdjustNeg = [cadjust * CONFIG_CLKADJUST, -cadjust * CONFIG_CLKADJUST]
+    for LOCAL_CLOCKADJUST in cAdjustNeg:
+      for i in range(0,CONFIG_WINDOW_SLIDE):
+        i += LOCAL_CLOCKADJUST
+        ms = getSingleSAD(trace1[CONFIG_WINDOW_OFFSET + i:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH + i],trace2[CONFIG_WINDOW_OFFSET:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH])
+        if ms < minimalSAD:
+          minimalSAD = ms
+          minimalSADIndex = i
+      for i in range(-CONFIG_WINDOW_SLIDE,0):
+        i += LOCAL_CLOCKADJUST
+        if CONFIG_WINDOW_OFFSET + i > 0:
+          ms = getSingleSAD(trace1[CONFIG_WINDOW_OFFSET + i:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH + i],trace2[CONFIG_WINDOW_OFFSET:CONFIG_WINDOW_OFFSET + CONFIG_WINDOW_LENGTH])
+          if ms < minimalSAD:
+            minimalSAD = ms
+            minimalSADIndex = i
   return (minimalSADIndex,minimalSAD)
 
 def printHelp():
@@ -116,6 +134,8 @@ def printHelp():
   print("             : everything not matching this is discarded!!!!")
   print(" -l <cutoff,samplerate,order> : lowpass before preprocessing")
   # print(" -b <lowcut,highcut,samplerate,order> : bandpass before preprocessing")
+  print(" --clkadjust <off> : length of each clock adjustment")
+  print(" --clkadjust-max <num> : maximum number of clock adjustments")
   print(" --window-offset <offset> : offset of window to match in samples")
   print(" --window-length <length> : length of window to match in samples")
   print(" --window-slide <maxslide> : max num of samples to slide the window to search for a match")
@@ -140,6 +160,12 @@ def printConfig():
     print(("   Lowpass Order: %d" % CONFIG_ORDER))
   else:
     print(" Use Lowpass: no")
+  if CONFIG_CLKADJUST == 0:
+    print(" Use clock adjuster: no")
+  else:
+    print(" Use clock adjuster: yes")
+    print("    Clock adjust length: %d" % CONFIG_CLKADJUST)
+    print("    Clock adjust max: %d" % CONFIG_CLKADJUST_MAX)
   if CONFIG_STRATEGY in (USE_MAXCORR,USE_MINSAD):
     print(" Window configuration:")
     print(("   Window offset: %d samples" % CONFIG_WINDOW_OFFSET))
@@ -152,7 +178,7 @@ def printConfig():
   print("-----------------------------------------------------")
 
 if __name__ == "__main__":
-  optlist,args = getopt.getopt(sys.argv[1:],"hf:w:l:r:c:b:d:",["help","strategy=","lowpass=","reftrace=","window-offset=","window-length=","window-slide=","cutoff=","bucketsize=","discard="])
+  optlist,args = getopt.getopt(sys.argv[1:],"hf:w:l:r:c:b:d:",["help","strategy=","lowpass=","reftrace=","window-offset=","window-length=","window-slide=","cutoff=","bucketsize=","discard=","clkadjust=","clkadjust-max="])
   for arg, value in optlist:
     if arg == "-f":
       CONFIG_INFILE = value
@@ -196,6 +222,10 @@ if __name__ == "__main__":
       CONFIG_WINDOW_LENGTH = int(value)
     elif arg == "--window-offset":
       CONFIG_WINDOW_OFFSET = int(value)
+    elif arg == "--clkadjust":
+      CONFIG_CLKADJUST = int(value)
+    elif arg == "--clkadjust-max":
+      CONFIG_CLKADJUST_MAX = int(value)
     elif arg == "--window-slide":
       CONFIG_WINDOW_SLIDE = int(value)
     elif arg in ("-b","--bucketsize"):

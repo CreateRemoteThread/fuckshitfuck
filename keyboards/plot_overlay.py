@@ -8,6 +8,7 @@ from scipy.signal import butter,lfilter, freqz
 import numpy as np
 import sys
 import glob
+import getopt
 from scipy import signal
 import support
 
@@ -26,13 +27,22 @@ def getColorPrefix(fn):
     availColors.remove(colorChart[prefix])
     return (prefix,colorChart[prefix])
 
+CONFIG_ALPHA = []
+
 if __name__ == "__main__":
   if len(sys.argv) < 2:
-    print("usage: ./plotlite.py <savegame>")
+    usage()
+    # print("usage: ./plotlite.py <savegame>")
     sys.exit(0)
   df = []
-  for a in sys.argv[1:]:
-    df += glob.glob(a+"*")
+  opts,remainder = getopt.getopt(sys.argv[1:],"f:a:",["file=","alpha="])
+  for opt, arg in opts:
+    if opt in ("-f","--file"):
+      df += glob.glob(arg + "*")
+    elif opt in ("-a","--alpha"):
+      CONFIG_ALPHA.append(arg)
+  # for a in sys.argv[1:]:
+  #   df += glob.glob(a+"*")
   fig,(ax1,ax2) = plt.subplots(2,1)
   for fn in df:
     print(fn)
@@ -44,8 +54,12 @@ if __name__ == "__main__":
       print(support.findReallyLocalMaxima(support.block_preprocess_function(data[1][nomnom+1000:nomnom+support.CONFIG_MAX_PULSEWIDTH]))) 
     data0_slice = data[0][0:75000]
     data1_slice = data[1][0:75000]
-    ax1.plot(support.block_preprocess_function(data0_slice),label=p,color=c)
-    ax2.plot(support.block_preprocess_function(data1_slice),label=p,color=c)
+    if p in CONFIG_ALPHA:
+      ax1.plot(support.block_preprocess_function(data0_slice),label=p,color=c,alpha=0.5)
+      ax2.plot(support.block_preprocess_function(data1_slice),label=p,color=c,alpha=0.5)
+    else:
+      ax1.plot(support.block_preprocess_function(data0_slice),label=p,color=c)
+      ax2.plot(support.block_preprocess_function(data1_slice),label=p,color=c)
   ax1.legend()
   ax2.legend()
   plt.show()
