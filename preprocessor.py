@@ -6,6 +6,10 @@ from numpy import *
 import getopt
 import sys
 import support.filemanager
+import numpy as np
+import matplotlib.pyplot as plt
+
+# this should define a scripting language implementing "align".
 
 def butter_bandpass(lowcut,highcut,fs,order=5):
   nyq = 0.5 * fs
@@ -29,8 +33,12 @@ def butter_lowpass_filter(data, cutoff, fs, order=5):
   y = lfilter(b, a, data)
   return y
 
-CONFIG_USE_LOWPASS = False
+CONFIG_USE_FIRSTPEAK = False
+CONFIG_FIRSTPEAK_MIN = 0
+CONFIG_FIRSTPEAK_MAX = 0
+CONFIG_FIRSTPEAK_CUTOFF = 0
 
+CONFIG_USE_LOWPASS = False
 # config of lowpass filter
 CONFIG_SAMPLERATE = 124999999
 CONFIG_CUTOFF=60000
@@ -96,7 +104,7 @@ def getMaxCorrCoeff(trace1,trace2):
           maxCf = r[0,1]
           maxCfIndex = i
   return (maxCf,maxCfIndex)
- 
+
 def getMinimalSAD(trace1,trace2):
   minimalSAD = 500.0
   minimalSADIndex = 0.0
@@ -160,6 +168,15 @@ def printConfig():
     print(("   Lowpass Order: %d" % CONFIG_ORDER))
   else:
     print(" Use Lowpass: no")
+  if CONFIG_USE_FIRSTPEAK:
+    print(" Use first peak algorithm: yes")
+    if CONFIG_FIRSTPEAK_MAX == 0:
+      print("   First past the post: %f" % CONFIG_FIRSTPEAK_MIN)
+    else:
+      print("   First peak minimum: %d" % CONFIG_FIRSTPEAK_MIN)
+      print("   First peak maximum: %d" % CONFIG_FIRSTPEAK_MAX)
+  else:
+    print(" Use first peak algorithm: no")
   if CONFIG_CLKADJUST == 0:
     print(" Use clock adjuster: no")
   else:
@@ -178,7 +195,7 @@ def printConfig():
   print("-----------------------------------------------------")
 
 if __name__ == "__main__":
-  optlist,args = getopt.getopt(sys.argv[1:],"hf:w:l:r:c:b:d:",["help","strategy=","lowpass=","reftrace=","window-offset=","window-length=","window-slide=","cutoff=","bucketsize=","discard=","clkadjust=","clkadjust-max="])
+  optlist,args = getopt.getopt(sys.argv[1:],"hf:w:l:r:c:b:d:",["help","strategy=","lowpass=","reftrace=","window-offset=","window-length=","window-slide=","cutoff=","bucketsize=","discard=","clkadjust=","clkadjust-max=","firstpeak="])
   for arg, value in optlist:
     if arg == "-f":
       CONFIG_INFILE = value
@@ -205,6 +222,19 @@ if __name__ == "__main__":
       else:
         print("Invalid preprocessing strategy. Valid options are CORRCOEF,SAD,LOWPASS,SAVEMAT,SAVECW (SAVECW does not need filename)")
         sys.exit(0)
+    elif arg == "--firstpeak":
+      print("Enabling peak alignment first-pass")
+      CONFIG_USE_FIRSTPEAK = True
+      if "," in value:
+        (mi,ma) = value.split(",")
+        CONFIG_FIRSTPEAK_MIN = int(mi)
+        CONFIG_FIRSTPEAK_MAX = int(ma)
+        if CONFIG_FIRSTPEAK_MAX <= CONFIG_FIRSTPEAK_MIN:
+          print("First peak maximum (%d) must exceed first peak minimum (%d)" % (CONFIG_FIRSTPEAK_MIN,CONFIG_FIRSTPEAK_MAX))
+          sys.exit(0)
+      else:
+        CONFIG_FIRSTPEAK_MIN = float(value)
+        CONFIG_FIRSTPEAK_MAX = 0
     elif arg in ("-l","--lowpass"):
       try:
         (str_cutoff,str_samplerate,str_order) = value.split(",")
@@ -244,6 +274,18 @@ if __name__ == "__main__":
     ref = butter_lowpass_filter(df['traces'][CONFIG_REFTRACE],CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
   else:
     ref = df['traces'][CONFIG_REFTRACE]
+  if CONFIG_USE_FIRSTPEAK:
+    if CONFIG_FIRSTPEAK_MAX != 0:
+      c0 = ref[CONFIG_FIRSTPEAK_MIN:CONFIG_FIRSTPEAK_MAX]
+      print("Absolute maximum: value %f, location %d" % (max(c0),argmax(c0)))
+      CONFIG_FIRSTPEAK_REFERENCE = argmax(c0)
+      print("Windowed maximum offset is %d" % CONFIG_FIRSTPEAK_REFERENCE)
+    else:
+      for i in range(0,len(ref)):
+        if ref[i] > CONFIG_FIRSTPEAK_MIN:
+          break
+      CONFIG_FIRSTPEAK_REFERENCE = i
+      print("First past the post reference: %d" % CONFIG_FIRSTPEAK_REFERENCE)
   numTraces = len(df['traces'])
   sampleCnt = len(df['traces'][0])
   print((" + Sample count is %d" % sampleCnt))
@@ -298,6 +340,18 @@ if __name__ == "__main__":
         r2 = butter_lowpass_filter(x,CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
       else:
         r2 = x
+      if CONFIG_USE_FIRSTPEAK:
+        if CONFIG_FIRSTPEAK_MAX != 0:
+          x = argmax(r2[CONFIG_FIRSTPEAK_MIN:CONFIG_FIRSTPEAK_MAX]) - CONFIG_FIRSTPEAK_REFERENCE
+          print("Rolling by %d" % -x)
+          r2 = roll(r2,-x)
+        else:
+          for y in range(0,len(r2)):
+            if r2[y] > CONFIG_FIRSTPEAK_MIN:
+              break
+          x = y - CONFIG_FIRSTPEAK_REFERENCE
+          print("Rolling by %d" % -x)
+          r2 = roll(r2,-x)
       (msv,msi) = getMaxCorrCoeff(r2,ref)
       # (msi,msv) = getMinimalSAD(r2,ref)
       if msv > CONFIG_MCF_CUTOFF:

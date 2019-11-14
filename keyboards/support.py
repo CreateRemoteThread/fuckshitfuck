@@ -24,12 +24,16 @@ def specialk(val):
 # CONFIG_LOWPEAK_IDENTIFY = 0.02
 CONFIG_LOWPEAK_BACKOFF = 100
 
-def findReallyLocalMaxima(c0,relativePeaks=True):
+# findFirstPeak is a dirty hack for the a/s problem
+# to let us sort by 
+def findReallyLocalMaxima(c0,relativePeaks=True,findFirstPeak=False):
   peaks,props = signal.find_peaks(c0,height=np.percentile(c0,99.95),distance=150)
   if len(peaks) == 0:
     print("findReallyLocalMaxima: no peaks detected?")
     sys.exit(0)
   firstPeak = peaks[0]
+  if findFirstPeak:
+    return firstPeak
   if relativePeaks is False:
     firstPeak = 0
   return [(p-firstPeak,c0[p]) for p in peaks]
