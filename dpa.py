@@ -35,13 +35,13 @@ def loadTraces(fns):
 
 leakmodel = None
 
-def deriveKey(data,plaintexts):
+def deriveKey(tm):
   global CONFIG_LEAKMODEL
   global CONFIG_PLOT
   global TRACE_MAX
   global leakmodel
   leakmodel = support.attack.fetchModel(CONFIG_LEAKMODEL)
-  leakmodel.loadPlaintextArray(plaintexts) 
+  leakmodel.loadPlaintextArray(tm.loadPlaintexts()) 
   recovered = zeros(leakmodel.keyLength)
   for BYTE_POSN in range(0,leakmodel.keyLength):
     print("Attempting recovery of byte %d..." % BYTE_POSN)
@@ -53,16 +53,17 @@ def deriveKey(data,plaintexts):
       group2 = zeros(TRACE_LENGTH)
       diffProfile = zeros(TRACE_LENGTH)
       if TRACE_MAX == 0:
-        trace_count = data[:,0].size
+        trace_count = tm.traceCount
       else:
         trace_count = TRACE_MAX
       for TRACE_NUM in range(0,trace_count):
         hypothesis = leakmodel.genIValRaw(TRACE_NUM,BYTE_POSN,KEY_GUESS) # sbox[plaintexts[TRACE_NUM,BYTE_POSN] ^ KEY_GUESS]
         if bin(hypothesis)[2:][-1] == "1":
-          group1[:] += data[TRACE_NUM,TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
+          group1[:] += tm.getSingleTrace(TRACE_NUM)[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH] # )data[TRACE_NUM,TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
           numGroup1 += 1
         else:
-          group2[:] += data[TRACE_NUM,TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
+          group2[:] += tm.getSingleTrace(TRACE_NUM)[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH] # )data[TRACE_NUM,TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
+          # group2[:] += data[TRACE_NUM,TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
           numGroup2 += 1
       group1[:] /= numGroup1
       group2[:] /= numGroup2
@@ -115,9 +116,10 @@ if __name__ == "__main__":
     print("You must specify a file with -f")
     sys.exit(0)
   print("Stage 1: Loading plaintexts...")
-  data,plaintexts = loadTraces(fn)
+  tm = support.filemanager.TraceManager(fn)
+  # data,plaintexts = loadTraces(fn)
   print("Deriving key... wish me luck!")
-  r = deriveKey(data,plaintexts)
+  r = deriveKey(tm)
   if CONFIG_PLOT:
     plt.title("%s Power Leakage v Hypothesis Overview" % CONFIG_LEAKMODEL)
     plt.ylabel("Maximum Diff. of Means")

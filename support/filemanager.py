@@ -57,6 +57,9 @@ class TraceManager:
         print("TraceManager: length of pt_array is %d" % len(pt_array))
 
   def unmapBlocks(self,key):
+    if self.blockMap is None:
+      print("TraceManager: tried to unmap without mapping first. mapping now")
+      self.mapBlocks()
     # print("TraceManager: unmapBlocks called with %d" % key)
     for i in self.blockMap:
       (min_,max_,index_) = i
