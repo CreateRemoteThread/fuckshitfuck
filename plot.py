@@ -110,14 +110,6 @@ TITLE = "Single Trace Plot"
 XAXIS = "Sample Count"
 YAXIS = "Power"
 
-AVG_EN = False
-
-def configure_average():
-  global AVG_EN,TITLE
-  AVG_EN = True
-  TITLE = "Average Trace Plot"
-  
-
 def configure_fft(arg):
   global FFT_BASEFREQ,FFT_EN,TITLE,XAXIS
   FFT_BASEFREQ = float(arg)
@@ -170,7 +162,6 @@ def usage():
   print(" -l [cutoff,samplerate,order] : lowpass mode - units in hz")
   print(" -b [lowcut,highcut,samplerate,order] : bandpass mode - units in hz")
   print(" -F [samplerate] : plot fft, base freq in hz")
-  print(" -a : plot average trace")
   print(" -s [samplerate] : plot spectrogram")
   print(" -w [filename] : write output to file. suppresses window.")
 
@@ -179,15 +170,13 @@ CONFIG_WRITEFILE = None
 SPECIAL_TEST = False
 
 if __name__ == "__main__":
-  opts, remainder = getopt.getopt(sys.argv[1:],"tb:s:ahl:n:o:c:r:f:F:w:",["spectrogram=","average","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft=","highlight=","bandpass=","test"])
+  opts, remainder = getopt.getopt(sys.argv[1:],"tb:s:hl:n:o:c:r:f:F:w:",["spectrogram=","help","lowpass=","samples=","offset=","count=","ruler=","file=","fft=","highlight=","bandpass=","test"])
   for opt,arg in opts:
     if opt in ("-h","--help"):
       usage()
       sys.exit(0)
     elif opt in ("-s","--spectrogram"):
       configure_specgram(arg)
-    elif opt in ("-a","--average"):
-      configure_average()
     elif opt in ("-o","--offset"):
       OFFSET = int(float(arg))
     elif opt in ("-n","--samples"):
@@ -218,23 +207,24 @@ if __name__ == "__main__":
     print("You can't have both lowpass and bandpass filters (yet!)")
     sys.exit(0)
   import matplotlib.pyplot as plt
-  if [FFT_EN, LOWPASS_EN, AVG_EN, SPECGRAM_EN, BANDPASS_EN].count(True) > 1:
-    print("You can only select one of -F (FFT), -l (LOWPASS) or -a (AVERAGE), -b (BANDPASS)")
+  if [FFT_EN, LOWPASS_EN, SPECGRAM_EN, BANDPASS_EN].count(True) > 1:
+    print("You can only select one of -F (FFT), -l (LOWPASS) or -b (BANDPASS)")
     sys.exit(0)
   if SPECGRAM_EN == False:
     fig, ax1 = plt.subplots()
+  if len(ADDITIONAL_FILES) != 1:
+    print("TraceManager no longer supports multiple files by design. Try something else")
+    sys.exit(0)
   for f in ADDITIONAL_FILES:
-    df = support.filemanager.load(f)
-    # df = load(f,mmap_mode = 'r')
-    # print(TRACES)
-    # sys.exit(0)
+    tm = support.filemanager.TraceManager(f)
     for i in TRACES:
       if OFFSET == 0 and COUNT == 0:
-        d = df['traces'][i]
+        d = tm.getSingleTrace(i)
       else:
-        d = df['traces'][i][OFFSET:OFFSET + COUNT]
+        d = tm.getSingleTrace(i)[OFFSET:OFFSET+COUNT]
       if LOWPASS_EN: # this code is disgusting but fuck you
-        d = df['traces'][i]
+        d = tm.getSingleTrace(i)
+        # d = df['traces'][i]
         if OFFSET == 0 and COUNT == 0:
           if SPECIAL_TEST:
             lowpassed_d = butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER)
@@ -248,7 +238,8 @@ if __name__ == "__main__":
         else:
           plt.plot(butter_lowpass_filter(d,LOWPASS_CUTOFF,LOWPASS_SR,LOWPASS_ORDER)[OFFSET:OFFSET+COUNT])
       elif BANDPASS_EN:
-        d = df['traces'][i]
+        d = tm.getSingleTrace(i)
+        # d = df['traces'][i]
         if OFFSET == 0 and COUNT == 0:
           plt.plot(butter_bandpass_filter(d,BANDPASS_LOWCUT,BANDPASS_HIGHCUT,BANDPASS_SR,BANDPASS_ORDER))
         else:
@@ -278,24 +269,6 @@ if __name__ == "__main__":
           plt.savefig(CONFIG_WRITEFILE)
         else:
           plt.show()
-        PLOT_SHOWN = True
-      elif AVG_EN:
-        if COUNT == 0:
-          m = zeros(len(df['traces'][0]))
-          numTraces = 0
-          for trace in df['traces']:
-            m[:] += trace[:]
-            numTraces += 1
-          m[:] /= numTraces
-          plt.plot(m)
-        else:
-          m = zeros(COUNT)
-          numTraces = 0
-          for trace in df['traces']:
-            m[:] += trace[OFFSET:OFFSET + COUNT]
-            numTraces += 1
-          m /= numTraces
-          plt.plot(m)
       else:
         plt.plot(d)
   if PLOT_SHOWN is False:
