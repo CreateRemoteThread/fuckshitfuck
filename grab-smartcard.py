@@ -99,7 +99,7 @@ CONFIG_ANALOGOFFSET = -0.01
 CONFIG_WRITEFILE = "%s.traces" % uuid.uuid4()
 CONFIG_TLVA = False
 VRANGE_PRIMARY = 0.05
-CONFIG_BUFFERSIZE = 50
+CONFIG_BUFFERSIZE = 200
 
 if __name__ == "__main__":
   optlist, args = getopt.getopt(sys.argv[1:],"hr:n:c:o:w:",["help","samplerate=","samples=","count=","offset=","write_file=","tlva"])
@@ -195,5 +195,6 @@ if __name__ == "__main__":
         data = np.zeros((CONFIG_BUFFERSIZE,16),np.uint8)         # RAND
         data_out = np.zeros((CONFIG_BUFFERSIZE,16),np.uint8)     # AUTN
     print("grab-smartcard.py: final save...")
-    tm.saveBlock(traces,data,data_out)
+    if i % CONFIG_BUFFERISZE != 0:
+      tm.saveBlock(traces[0:i % CONFIG_BUFFERSIZE],data[0:i%CONFIG_BUFFERSIZE],data_out[i % CONFIG_BUFFERSIZE])
     tm.cleanup()

@@ -13,7 +13,7 @@ This toolkit comprises:
     - ./grab3.py, for acquisition from picoscope scopes
     - ./rigol-new.py, for acquisition from rigol scopes
     - ./grab-smartcard.py, for pcsc+picoscope acquisition from smartcards
-    - ./x/grab-cw.py, for chipwhisperer synchronous sampling (broken, PLL input too slow)
+    - ./smartcards/grab-cw.py, for chipwhisperer synchronous sampling (broken, PLL input too slow)
   - Preprocessing:
     - ./preprocessor.py, for temporal alignment of traces
   - Analysis:

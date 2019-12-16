@@ -9,6 +9,7 @@ import time
 import numpy as np
 import binascii
 import matplotlib.pyplot as plt
+import uuid
 import support.filemanager
 
 IP_ADDR = "10.10.10.4"
@@ -27,18 +28,18 @@ START_OFFSET = 0 # 1400000
 END_OFFSET = 1900000
 TRACE_COUNT = 5
 RAND_LEN = 16
-SAVEFILE = "lol.npz"
+SAVEFILE = "%s.traces" % uuid.uuid4()
 TEST_MODE = False
 
 if __name__ == "__main__":
-  opts,remainder = getopt.getopt(sys.argv[1:],"hi:o:n:c:f:t",["help","ip=","offset=","samples=","count=","file=","test"])
+  opts,remainder = getopt.getopt(sys.argv[1:],"hi:o:n:c:w:t",["help","ip=","offset=","samples=","count=","writefile=","test"])
   for (opt,arg) in opts:
     if opt in ("-h","--help"):
       usage()
       sys.exit(0)
     elif opt in ("-o","--offset"):
       START_OFFSET = int(arg)
-    elif opt in ("-f","--file"):
+    elif opt in ("-w","--writefile"):
       SAVEFILE = arg
     elif opt in ("-n","--samples"):
       NUM_SAMPLES = int(arg)
@@ -85,6 +86,10 @@ traces = np.zeros((TRACE_COUNT,NUM_SAMPLES),np.float32)
 data = np.zeros((TRACE_COUNT,RAND_LEN),np.uint8)
 data_out = np.zeros((TRACE_COUNT,RAND_LEN),np.uint8)
 
+tm = support.filemanager.TraceManager(SAVEFILE)
+BUFFERSIZE = 1000
+bufferedTraces = 0
+
 for i in range(0,TRACE_COUNT):
   scope.write(":STOP")
   scope.single()
@@ -116,8 +121,20 @@ for i in range(0,TRACE_COUNT):
   traces[i,:] = [np.float32(d) for d in datax]
   data[i,:] = [ord(x) for x in rand_input]
   data_out[i,:] = [ord(x) for x in binascii.unhexlify(ctx_out[1:])]
+  bufferedTraces += 1
+  if i != 0 and i % BUFFERSIZE == 0:
+    tm.saveBlock(traces,data,data_out)
+    traces = np.zeros((TRACE_COUNT,NUM_SAMPLES),np.float32)
+    data = np.zeros((TRACE_COUNT,RAND_LEN),np.uint8)
+    data_out = np.zeros((TRACE_COUNT,RAND_LEN),np.uint8)
+    bufferedTraces = 0
 
-support.filemanager.save(SAVEFILE,traces=traces,data=data,data_out=data_out)
+if bufferedTraces != 0:
+  tm.saveBlock(traces[0:bufferedTraces],data[0:bufferedTraces],data_out[0:bufferedTraces])
+  
+tm.cleanup()
+
+# support.filemanager.save(SAVEFILE,traces=traces,data=data,data_out=data_out)
 scope.run()
 scope.close()
 ser.close()
