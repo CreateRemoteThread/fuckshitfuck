@@ -8,8 +8,6 @@
 #   - each trace, only use 8000 samples starting from 1000
 #   - use the AES_SboxOut_HW model (support/attack.py)
 
-# 16/12/2019: Updated to use TraceManager
-
 import numpy as np
 from scipy.signal import butter, lfilter, freqz
 import matplotlib.pyplot as plt
@@ -35,17 +33,15 @@ CONFIG_LEAKMODEL = "helpmsg"
 
 leakmodel = None
 
-def deriveKey(tm):
+def deriveKey(data,plaintexts):
   global CONFIG_LEAKMODEL
   global CONFIG_PLOT
   global TRACE_MAX
   global leakmodel
   leakmodel = support.attack.fetchModel(CONFIG_LEAKMODEL)
-  leakmodel.loadPlaintextArray(tm.loadPlaintexts())
+  leakmodel.loadPlaintextArray(plaintexts)
   bestguess = [0] * leakmodel.keyLength
-  meant = tm.getMeant()[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
-  print(meant)
-  # meant = np.mean(data,axis=0,dtype=np.float64)[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH] # this should be static.
+  meant = np.mean(data,axis=0,dtype=np.float64)[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH] # this should be static.
   for bnum in range(0,leakmodel.keyLength):
     cpaoutput = [0]  * leakmodel.fragmentMax
     maxcpa = [0] * leakmodel.fragmentMax
@@ -55,17 +51,19 @@ def deriveKey(tm):
       sumden1 = np.zeros(TRACE_LENGTH)
       sumden2 = np.zeros(TRACE_LENGTH)
       if TRACE_MAX == 0:
-        trace_count = tm.traceCount
-        # trace_count = plaintexts[:,0].size
+        trace_count = plaintexts[:,0].size
       else:
         trace_count = TRACE_MAX
       hyp = zeros(trace_count)
       for tnum in range(0,trace_count):
+        # if tnum not in list(desManager.keys()):
+        #   desManager[tnum] = desIntermediateValue()
+        #   desManager[tnum].preprocess(plaintexts[tnum])
         hyp[tnum] = leakmodel.genIVal(tnum,bnum,kguess) # bin(desManager[tnum].generateSbox(bnum,kguess)).count("1")
       meanh = np.mean(hyp,dtype=np.float64)
       for tnum in range(0,trace_count):
         hdiff = (hyp[tnum] - meanh)
-        tdiff = tm.getSingleTrace(tnum)[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH] - meant
+        tdiff = data[tnum,TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH] - meant
         sumnum = sumnum + (hdiff * tdiff)
         sumden1 = sumden1 + hdiff * hdiff
         sumden2 = sumden2 + tdiff * tdiff
@@ -130,12 +128,12 @@ if __name__ == "__main__":
     print("You must specify a file with -f")
     sys.exit(0)
   print("Stage 1: Loading plaintexts...")
-  tm = support.filemanager.TraceManager(fn)
-  tm.mapBlocks()
+  data,plaintexts = loadTraces(fn)
   if TRACE_LENGTH == 0:
-    TRACE_LENGTH = tm.numPoints
+    TRACE_LENGTH = len(data[0])
+    print("Setting trace length to %d" % TRACE_LENGTH)
   print("Stage 2: Deriving key... wish me luck!")
-  r = deriveKey(tm)
+  r = deriveKey(data,plaintexts)
   if CONFIG_PLOT:
     plt.title("%s SubKey Correlation Overview" % CONFIG_LEAKMODEL)
     plt.ylabel("Correlation")

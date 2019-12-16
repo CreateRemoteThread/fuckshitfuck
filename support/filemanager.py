@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import scipy.io
 import numpy
@@ -21,6 +21,66 @@ class TraceManager:
     print("TraceManager: saveBlock wrapping up")
     if self.f is not None:
       self.f.close()
+
+  # wierd weighted mean...
+  def getMeant(self):
+    meant_array = []
+    meant_count =  0
+    print("TraceManager: getMeant called, grab sample data")
+    for i in range(0,65535):
+      if i not in self.dataObj.keys():
+        break
+      else:
+        meant_array.append( (numpy.mean(self.dataObj[i].traces,axis=0,dtype=numpy.float64),len(self.dataObj[i].data)) )
+        meant_count += len(self.dataObj[i].data)
+    print("TraceManager: getMeant apply weights")
+    final_meant = None
+    for (meant,meanweight) in meant_array:
+      if final_meant is None:
+        final_meant = meant * (meanweight / meant_count)
+      else:
+        final_meant += meant * (meanweight / meant_count)
+    return final_meant
+
+  def loadPlaintexts(self):
+    print("TraceManager: loadPlaintexts called")
+    pt_array = None
+    for i in range(0,65535):
+      if i not in self.dataObj.keys():
+        print("TraceManager: loadPlaintexts complete, %d entries returned" % len(pt_array))
+        return pt_array
+      else:
+        if pt_array is None:
+          pt_array = self.dataObj[i].data
+        else:
+          pt_array = numpy.vstack([pt_array,self.dataObj[i].data])
+        print("TraceManager: length of pt_array is %d" % len(pt_array))
+
+  def unmapBlocks(self,key):
+    # print("TraceManager: unmapBlocks called with %d" % key)
+    for i in self.blockMap:
+      (min_,max_,index_) = i
+      if key >= min_ and key < max_:
+        return (min_,max_,index_)
+    print("TraceManager: unmapBlocks couldn't unmap %d" % key)
+    sys.exit(0)
+
+  def getSingleTrace(self,key):
+    (min_,max_,index_) = self.unmapBlocks(key)
+    return self.dataObj[index_].traces[key - min_]
+
+  def mapBlocks(self):
+    self.blockMap = []
+    baseCount = 0
+    print("TraceManager: mapBlocks called")
+    for i in range(0,65535):
+      if i not in self.dataObj.keys():
+        print("TraceManager: mapBlocks complete, map up to date")
+        return
+      else:
+        print("TraceManager: mapBlocks mapping %d-%d to %d" % (baseCount,baseCount + len(self.dataObj[i].traces),i))
+        self.blockMap.append( (baseCount,baseCount + len(self.dataObj[i].traces),i) )
+        baseCount += len(self.dataObj[i].traces)
 
   def saveBlock(self,traces,data_in,data_out):
     if self.numPoints is not None:
@@ -52,6 +112,10 @@ class TraceManager:
       self.dataObj[i].data = numpy.load(self.dataObj[i].data_fn,mmap_mode="r") 
       self.dataObj[i].traces = numpy.load(self.dataObj[i].traces_fn,mmap_mode="r") 
       self.dataObj[i].data_out = numpy.load(self.dataObj[i].data_out_fn,mmap_mode="r")
+      if self.traceCount is None:
+        self.traceCount = len(self.dataObj[i].traces)
+      else:
+        self.traceCount += len(self.dataObj[i].traces)
 
   def getNextKey(self):
     for i in range(0,65535):
@@ -61,6 +125,7 @@ class TraceManager:
         return i
 
   def __init__(self,filename):
+    self.blockMap = None
     print("TraceManager: Initializing with filename %s" % filename)
     self.dataObj = {}
     self.fn = filename
@@ -70,6 +135,7 @@ class TraceManager:
       WORKING_ROOT = "."
     self.WR = WORKING_ROOT
     self.numPoints = None
+    self.traceCount = None
     print("TraceManager: Setting session WORKING_ROOT to %s" % self.WR)
     baseName = "".join(self.fn.split(".")[:-1])
     self.DR = "%s.data" % baseName
@@ -85,7 +151,8 @@ class TraceManager:
         if "=" not in fl:
           continue
         (opt,val) = fl.rstrip().split("=")
-        (real_opt,opt_num) = opt.split(",")
+        (real_opt,opt_num_s) = opt.split(",")
+        opt_num = int(opt_num_s)
         if opt_num not in self.dataObj.keys():
           self.dataObj[opt_num] = TraceSet(opt_num)
         if real_opt == "data_in":
@@ -246,8 +313,22 @@ def load(fn):
     print("%d traces with %d points each loaded." % (traceCount,numPoints))
     return dataObj
 
+# test code to convert atmega-em7 for file manager testing.
 if __name__ == "__main__":
   if len(sys.argv) != 2:
     print("This is not meant to be called directly :)")
   else:
-    tm = TraceManager(sys.argv[1])
+    print("support.filemanager to TraceManager conversion")
+    dataObj = load(sys.argv[1])
+    import uuid
+    tm = TraceManager("%s.traces" % uuid.uuid4())
+    traceCount = len(dataObj["traces"])
+    BUFFER_SIZE = 50
+    lastI = 0
+    for i in range(0,traceCount):
+      if i != 0 and i % BUFFER_SIZE == 0:
+        tm.saveBlock(dataObj["traces"][lastI:i],dataObj["data"][lastI:i],dataObj["data_out"][lastI:i])
+        lastI = i
+    tm.saveBlock(dataObj["traces"][lastI:i],dataObj["data"][lastI:i],dataObj["data_out"][lastI:i])
+    # lastI = i
+    tm.cleanup()
