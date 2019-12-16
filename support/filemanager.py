@@ -5,6 +5,117 @@ import numpy
 import os
 import sys
 
+class TraceSet:
+  def __init__(self,key):
+    print("TraceSet: Initialized blank TraceSet with key %s" % key)
+    self.key = key
+    self.traces_fn = None
+    self.traces = None
+    self.data_fn = None
+    self.data = None
+    self.data_out_fn = None
+    self.data_out = None
+
+class TraceManager:
+  def cleanup(self):
+    print("TraceManager: saveBlock wrapping up")
+    if self.f is not None:
+      self.f.close()
+
+  def saveBlock(self,traces,data_in,data_out):
+    if self.numPoints is not None:
+      if len(traces[0]) != self.numPoints:
+        print("TraceManager: saveBlock trying to write a trace with incorrect length. Expected %d, trying to write %d" % (self.numPoints, len(traces[0])))
+        sys.exit(0)
+    if self.f is None:
+      print("TraceManager: saveBlock creating new file and data directory")
+      self.f = open(self.fn,"w+")
+      with cd(self.WR):
+        os.mkdir(self.DR)
+    else:
+      print("TraceManager: saveBlock seeking to file's end")
+      self.f.seek(0,2)
+    i = self.getNextKey()
+    with cd(self.WR):
+      print("TraceManager: saveBlock writing to storage...")
+      self.dataObj[i] = TraceSet(i)
+      self.dataObj[i].traces_fn = "%s/traces-%s.npy" % (self.DR,i) 
+      self.dataObj[i].data_fn = "%s/plaintext-%s.npy" % (self.DR,i) 
+      self.dataObj[i].data_out_fn = "%s/ciphertext-%s.npy" % (self.DR,i)
+      numpy.save(self.dataObj[i].traces_fn,traces)
+      numpy.save(self.dataObj[i].data_fn,data_in)
+      numpy.save(self.dataObj[i].data_out_fn,data_out)
+      self.f.write("traces,%d=%s\n" % (i,self.dataObj[i].traces_fn))
+      self.f.write("data_in,%d=%s\n" % (i,self.dataObj[i].data_fn))
+      self.f.write("data_out,%d=%s\n" % (i,self.dataObj[i].data_out_fn))
+      print("TraceManager: saveBlock refilling dataObj")
+      self.dataObj[i].data = numpy.load(self.dataObj[i].data_fn,mmap_mode="r") 
+      self.dataObj[i].traces = numpy.load(self.dataObj[i].traces_fn,mmap_mode="r") 
+      self.dataObj[i].data_out = numpy.load(self.dataObj[i].data_out_fn,mmap_mode="r")
+
+  def getNextKey(self):
+    for i in range(0,65535):
+      if i in self.dataObj.keys():
+        pass
+      else:
+        return i
+
+  def __init__(self,filename):
+    print("TraceManager: Initializing with filename %s" % filename)
+    self.dataObj = {}
+    self.fn = filename
+    try:
+      WORKING_ROOT = "/".join(filename.split("/")[:-1])
+    except:
+      WORKING_ROOT = "."
+    self.WR = WORKING_ROOT
+    self.numPoints = None
+    print("TraceManager: Setting session WORKING_ROOT to %s" % self.WR)
+    baseName = "".join(self.fn.split(".")[:-1])
+    self.DR = "%s.data" % baseName
+    if os.path.isfile(filename) is False:
+      print("TraceManager: %s is not a file, creating a new one" % filename)
+      self.f = None # lazy save
+      return
+    self.f = open(filename,"r+")
+    with cd(WORKING_ROOT):
+      traceCount = 0
+      numPoints = None
+      for fl in self.f.readlines():
+        if "=" not in fl:
+          continue
+        (opt,val) = fl.rstrip().split("=")
+        (real_opt,opt_num) = opt.split(",")
+        if opt_num not in self.dataObj.keys():
+          self.dataObj[opt_num] = TraceSet(opt_num)
+        if real_opt == "data_in":
+          print("TraceManager: Loading file %s as data_in array" % val)
+          self.dataObj[opt_num].data_fn = val
+          self.dataObj[opt_num].data =numpy.load(val,mmap_mode="r") 
+        elif real_opt == "data_out":
+          print("TraceManager: Loading file %s as data_out array" % val)
+          self.dataObj[opt_num].data_out_fn = val
+          self.dataObj[opt_num].data_out =numpy.load(val,mmap_mode="r") 
+        elif real_opt == "traces":
+          print("TraceManager: Loading file %s as trace array" % val)
+          self.dataObj[opt_num].traces_fn = val
+          self.dataObj[opt_num].traces = numpy.load(val,mmap_mode="r")
+          traceCount += len(self.dataObj[opt_num].traces)
+          if numPoints is None:
+            numPoints = len(self.dataObj[opt_num].traces[0])
+          else:
+            newNumPoints = len(self.dataObj[opt_num].traces[0])
+            if numPoints != newNumPoints:
+              print("TraceManager: Mismatched point count in trace %s - expected %d, got %d" % (val,numPoints,newNumPoints))
+              sys.exit(0)
+    print("TraceManager: %d traces with %d points each loaded." % (traceCount,numPoints))
+    self.traceCount = traceCount
+    self.numPoints = numPoints
+
+###########################################################
+#################### LEGACY SHIT BELOW ####################
+###########################################################
+
 class cd:
   def __init__(self,newPath):
     self.newPath = os.path.expanduser(newPath)
@@ -112,15 +223,16 @@ def load(fn):
     for f_ in f.readlines():
       l = f_.rstrip()
       (arg,val) = l.split("=")
-      if arg == "traces":
+      # backward compatibility fix
+      if arg == "traces,0" or arg == "traces":
         print("* Loading %s as trace array" % val)
         dataObj["traces_fn"] = val
         dataObj["traces"] = numpy.load(val,mmap_mode="r")
-      elif arg == "data_in":
+      elif arg == "data_in,0" or arg == "data_in":
         print("* Loading %s as data_in" % val)
         dataObj["data_fn"] = val
         dataObj["data"] = numpy.load(val,mmap_mode="r")
-      elif arg == "data_out":
+      elif arg == "data_out,0" or arg == "data_out":
         print("* Loading %s as data_out" % val)
         dataObj["data_out_fn"] = val
         dataObj["data_out"] = numpy.load(val,mmap_mode="r")
@@ -135,10 +247,7 @@ def load(fn):
     return dataObj
 
 if __name__ == "__main__":
-  # save("/media/talos/CORROSION/test-save",[1,2,3,4,5],[1,2,3,4,5],[1,2,3,4,5])
-  # df = load("/media/talos/CORROSION/test-save.traces")
-  # print(df["data"])
   if len(sys.argv) != 2:
     print("This is not meant to be called directly :)")
   else:
-    convert(sys.argv[1])
+    tm = TraceManager(sys.argv[1])

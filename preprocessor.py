@@ -342,16 +342,18 @@ if __name__ == "__main__":
         r2 = x
       if CONFIG_USE_FIRSTPEAK:
         if CONFIG_FIRSTPEAK_MAX != 0:
-          x = argmax(r2[CONFIG_FIRSTPEAK_MIN:CONFIG_FIRSTPEAK_MAX]) - CONFIG_FIRSTPEAK_REFERENCE
-          print("Rolling by %d" % -x)
-          r2 = roll(r2,-x)
+          xydiff = argmax(r2[CONFIG_FIRSTPEAK_MIN:CONFIG_FIRSTPEAK_MAX]) - CONFIG_FIRSTPEAK_REFERENCE
+          print("Rolling by %d" % -xydiff)
+          r2 = roll(r2,-xydiff)
+          x = roll(x,-xydiff)
         else:
           for y in range(0,len(r2)):
             if r2[y] > CONFIG_FIRSTPEAK_MIN:
               break
-          x = y - CONFIG_FIRSTPEAK_REFERENCE
-          print("Rolling by %d" % -x)
-          r2 = roll(r2,-x)
+          xydiff = y - CONFIG_FIRSTPEAK_REFERENCE
+          print("Rolling by %d" % -xydiff)
+          r2 = roll(r2,-xydiff)
+          x = roll(x,-xydiff)
       (msv,msi) = getMaxCorrCoeff(r2,ref)
       # (msi,msv) = getMinimalSAD(r2,ref)
       if msv > CONFIG_MCF_CUTOFF:

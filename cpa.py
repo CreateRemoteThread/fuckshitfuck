@@ -41,6 +41,7 @@ def deriveKey(data,plaintexts):
   leakmodel = support.attack.fetchModel(CONFIG_LEAKMODEL)
   leakmodel.loadPlaintextArray(plaintexts)
   bestguess = [0] * leakmodel.keyLength
+  meant = np.mean(data,axis=0,dtype=np.float64)[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH] # this should be static.
   for bnum in range(0,leakmodel.keyLength):
     cpaoutput = [0]  * leakmodel.fragmentMax
     maxcpa = [0] * leakmodel.fragmentMax
@@ -60,8 +61,6 @@ def deriveKey(data,plaintexts):
         #   desManager[tnum].preprocess(plaintexts[tnum])
         hyp[tnum] = leakmodel.genIVal(tnum,bnum,kguess) # bin(desManager[tnum].generateSbox(bnum,kguess)).count("1")
       meanh = np.mean(hyp,dtype=np.float64)
-      meant = np.mean(data,axis=0,dtype=np.float64)[TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH]
-      print(meant)
       for tnum in range(0,trace_count):
         hdiff = (hyp[tnum] - meanh)
         tdiff = data[tnum,TRACE_OFFSET:TRACE_OFFSET + TRACE_LENGTH] - meant

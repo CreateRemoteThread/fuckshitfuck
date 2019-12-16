@@ -88,7 +88,7 @@ def usage():
   print(" -n: set number of samples (default 100,000)")
   print(" -c: set number of traces (default 1000)")
   print(" -o: set vertical offset (default: 0.0)")
-  print(" -w: set output file (default: [UUID].traces)")
+  print(" -w: set output file (default: [UUID].npz)")
   print(" --tlva: capture 50% fixed plaintext")
   sys.exit(0)
 
@@ -96,10 +96,9 @@ CONFIG_SAMPLERATE = 64000000
 CONFIG_SAMPLECOUNT = 500000
 CONFIG_TRACECOUNT = 1000
 CONFIG_ANALOGOFFSET = -0.01
-CONFIG_WRITEFILE = "%s.traces" % uuid.uuid4()
+CONFIG_WRITEFILE = "%s.npz" % uuid.uuid4()
 CONFIG_TLVA = False
 VRANGE_PRIMARY = 0.05
-CONFIG_BUFFERSIZE = 50
 
 if __name__ == "__main__":
   optlist, args = getopt.getopt(sys.argv[1:],"hr:n:c:o:w:",["help","samplerate=","samples=","count=","offset=","write_file=","tlva"])
@@ -148,12 +147,9 @@ if __name__ == "__main__":
     sys.exit(0)
   else:
     print(" >> Initializing numpy bullshit")
-    if CONFIG_TRACECOUNT < CONFIG_BUFFERSIZE:
-      CONFIG_BUFFERSIZE = CONFIG_TRACECOUNT
-    traces = np.zeros((CONFIG_BUFFERSIZE,CONFIG_SAMPLECOUNT),np.float32)
-    data = np.zeros((CONFIG_BUFFERSIZE,16),np.uint8)         # RAND
-    data_out = np.zeros((CONFIG_BUFFERSIZE,16),np.uint8)     # AUTN
-    tm = support.filemanager.TraceManager(CONFIG_WRITEFILE)
+    traces = np.zeros((CONFIG_TRACECOUNT,CONFIG_SAMPLECOUNT),np.float32)
+    data = np.zeros((CONFIG_TRACECOUNT,16),np.uint8)         # RAND
+    data_out = np.zeros((CONFIG_TRACECOUNT,16),np.uint8)     # AUTN
     print(" >> Initializing picoscope")
     ps = ps2000a.PS2000a()
     ps.setChannel('A','AC',VRange=VRANGE_PRIMARY,VOffset=CONFIG_ANALOGOFFSET,enabled=True,BWLimited=False)
@@ -180,20 +176,7 @@ if __name__ == "__main__":
       sc.french_apdu(next_rand,next_autn)
       ps.waitReady()
       dataA = ps.getDataV('A',CONFIG_SAMPLECOUNT,returnOverflow=False)
-      traces[i % CONFIG_BUFFERSIZE:] = dataA
-      data[i % CONFIG_BUFFERSIZE:] = next_rand
-      data_out[i % CONFIG_BUFFERSIZE:] = next_autn
-      if i != 0 and i % CONFIG_BUFFERSIZE == 0:
-        print("Flushing...")
-        tm.saveBlock(traces,data,data_out)
-        del(traces)
-        del(data)
-        del(data_out)
-        if (CONFIG_TRACECOUNT - i) < CONFIG_BUFFERSIZE:
-          CONFIG_BUFFERSIZE = CONFIG_TRACECOUNT - i
-        traces = np.zeros((CONFIG_BUFFERSIZE,CONFIG_SAMPLECOUNT),np.float32)
-        data = np.zeros((CONFIG_BUFFERSIZE,16),np.uint8)         # RAND
-        data_out = np.zeros((CONFIG_BUFFERSIZE,16),np.uint8)     # AUTN
-    print("grab-smartcard.py: final save...")
-    tm.saveBlock(traces,data,data_out)
-    tm.cleanup()
+      traces[i:] = dataA
+      data[i:] = next_rand
+      data_out[i:] = next_autn
+    support.filemanager.save(CONFIG_WRITEFILE,traces=traces,data=data,data_out=data_out)
