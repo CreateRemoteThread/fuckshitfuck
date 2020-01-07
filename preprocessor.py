@@ -9,8 +9,6 @@ import support.filemanager
 import numpy as np
 import matplotlib.pyplot as plt
 
-# this should define a scripting language implementing "align".
-
 def butter_bandpass(lowcut,highcut,fs,order=5):
   nyq = 0.5 * fs
   low = lowcut / nyq
@@ -54,8 +52,6 @@ CONFIG_WINDOW_SLIDE = 5000
 CONFIG_SAD_CUTOFF = 3.2
 CONFIG_MCF_CUTOFF = 0.9
 
-CONFIG_BUCKETSIZE = None
-
 USE_MAXCORR = 1
 USE_MINSAD = 2
 DO_LOWPASS = 3
@@ -78,8 +74,6 @@ def getSingleSAD(array1,array2):
 def getMaxCorrCoeff(trace1,trace2):
   maxCf = -1.0
   maxCfIndex = 0
-  # print(trace1[0:10])
-  # print(trace2[0:10])
   for cadjust in range(0,CONFIG_CLKADJUST_MAX + 1):
     if cadjust == 0:
       cAdjustNeg = [0]
@@ -188,14 +182,10 @@ def printConfig():
     print(("   Window offset: %d samples" % CONFIG_WINDOW_OFFSET))
     print(("   Max slide = %d samples" % CONFIG_WINDOW_SLIDE))
     print(("   Window length = %d samples" % CONFIG_WINDOW_LENGTH))
-  if CONFIG_BUCKETSIZE is None:
-    print(" No bucket configured")
-  else:
-    print((" Bucket size set at %d" % CONFIG_BUCKETSIZE))
   print("-----------------------------------------------------")
 
 if __name__ == "__main__":
-  optlist,args = getopt.getopt(sys.argv[1:],"hf:w:l:r:c:b:d:",["help","strategy=","lowpass=","reftrace=","window-offset=","window-length=","window-slide=","cutoff=","bucketsize=","discard=","clkadjust=","clkadjust-max=","firstpeak="])
+  optlist,args = getopt.getopt(sys.argv[1:],"hf:w:l:r:c:b:d:",["help","strategy=","lowpass=","reftrace=","window-offset=","window-length=","window-slide=","cutoff=","clkadjust=","clkadjust-max=","firstpeak="])
   for arg, value in optlist:
     if arg == "-f":
       CONFIG_INFILE = value
@@ -203,9 +193,6 @@ if __name__ == "__main__":
       CONFIG_OUTFILE = value
     elif arg in ("-h","--help"):
       printHelp()
-    elif arg in ("-d","--discard"):
-      CONFIG_DISCARD = True
-      CONFIG_DISCARDPILE = value
     elif arg == "--strategy":
       if value.upper() in ("CORRCOEF","CORRCOEFF"):
         CONFIG_STRATEGY = USE_MAXCORR
@@ -258,8 +245,6 @@ if __name__ == "__main__":
       CONFIG_CLKADJUST_MAX = int(value)
     elif arg == "--window-slide":
       CONFIG_WINDOW_SLIDE = int(value)
-    elif arg in ("-b","--bucketsize"):
-      CONFIG_BUCKETSIZE = int(value)
     elif arg in ("-c","--cutoff"):
       CONFIG_SAD_CUTOFF = float(value)
       CONFIG_MCF_CUTOFF = float(value)
@@ -269,11 +254,12 @@ if __name__ == "__main__":
   printConfig()
   savedDataIndex = 0
   discardDataIndex = 0
-  df = support.filemanager.load(CONFIG_INFILE)
+  tm_in = support.filemanager.TraceManager(CONFIG_INFILE)
+  tm_out = support.filemanager.TraceManager(CONFIG_OUTFILE)
   if CONFIG_USE_LOWPASS:
-    ref = butter_lowpass_filter(df['traces'][CONFIG_REFTRACE],CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
+    ref = butter_lowpass_filter(tm_in.getSingleTrace(CONFIG_REFTRACE),CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
   else:
-    ref = df['traces'][CONFIG_REFTRACE]
+    ref = tm_in.getSingleTrace(CONFIG_REFTRACE)
   if CONFIG_USE_FIRSTPEAK:
     if CONFIG_FIRSTPEAK_MAX != 0:
       c0 = ref[CONFIG_FIRSTPEAK_MIN:CONFIG_FIRSTPEAK_MAX]
@@ -286,24 +272,17 @@ if __name__ == "__main__":
           break
       CONFIG_FIRSTPEAK_REFERENCE = i
       print("First past the post reference: %d" % CONFIG_FIRSTPEAK_REFERENCE)
-  numTraces = len(df['traces'])
-  sampleCnt = len(df['traces'][0])
+  numTraces = tm_in.traceCount
+  sampleCnt = tm_in.numPoints
   print((" + Sample count is %d" % sampleCnt))
   print((" + Trace count is %d" % numTraces))
   traces = zeros((numTraces,sampleCnt),float32)
   data = zeros((numTraces,16),uint8)
   data_out = zeros((numTraces,16),uint8)
-  discard_traces = zeros((numTraces,sampleCnt),float32)
-  discard_data = zeros((numTraces,16),uint8)
-  discard_data_out = zeros((numTraces,16),uint8)
   print("----------------------------------------------------")
   if CONFIG_STRATEGY == USE_MINSAD:
-    for i in range(0,len(df['traces'])):
-      x = df['traces'][i]
-      if CONFIG_BUCKETSIZE is not None:
-        if savedDataIndex == CONFIG_BUCKETSIZE:
-          print("The bucket is full, not processing any more...!")
-          break
+    for i in range(0,numTraces):
+      x = tm_in.getSingleTrace(i)
       if CONFIG_USE_LOWPASS:
         r2 = butter_lowpass_filter(x,CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
       else:
@@ -313,17 +292,11 @@ if __name__ == "__main__":
       if msv < CONFIG_SAD_CUTOFF:
         if msi == -CONFIG_WINDOW_SLIDE or msi == CONFIG_WINDOW_SLIDE - 1:
           print(("Index %d, discarding (edge MSI = not found)" % i))
-          if CONFIG_DISCARD:
-            discard_traces[discardDataIndex,:] = x
-            discard_data[discardDataIndex,:] = df['data'][i]
-            discard_data_out[discardDataIndex,:] = df['data_out'][i]
-            discardDataIndex += 1
         else:
           print(("Index %d, Minimal SAD Slide %d Samples, Minimal SAD Value %f" % (i,msi,msv)))
           if CONFIG_MATCHONLY:
             traces[savedDataIndex,:] = x
-          else:
-            traces[savedDataIndex,:] = roll(x,-msi)
+
           data[savedDataIndex,:] = df['data'][i]
           data_out[savedDataIndex,:] = df['data_out'][i]
           savedDataIndex += 1
@@ -332,10 +305,6 @@ if __name__ == "__main__":
   elif CONFIG_STRATEGY == USE_MAXCORR:
     for i in range(0,len(df['traces'])):
       x = df['traces'][i]
-      if CONFIG_BUCKETSIZE is not None:
-        if savedDataIndex == CONFIG_BUCKETSIZE:
-          print("The bucket is full, not processing any more...!")
-          break
       if CONFIG_USE_LOWPASS:
         r2 = butter_lowpass_filter(x,CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
       else:
@@ -359,11 +328,6 @@ if __name__ == "__main__":
       if msv > CONFIG_MCF_CUTOFF:
         if msi == -CONFIG_WINDOW_SLIDE or msi == CONFIG_WINDOW_SLIDE - 1:
           print(("Index %d, discarding (edge Max Coeff Index = not found, mcf is %f)" % (i,msv)))
-          if CONFIG_DISCARD:
-            discard_traces[discardDataIndex,:] = x
-            discard_data[discardDataIndex,:] = df['data'][i]
-            discard_data_out[discardDataIndex,:] = df['data_out'][i]
-            discardDataIndex += 1
         else:
           print(("Index %d, Max Corr Coeff Slide %d Samples, Max CF Value %f" % (i,msi,msv)))
           if CONFIG_MATCHONLY:
@@ -378,10 +342,6 @@ if __name__ == "__main__":
   elif CONFIG_STRATEGY == DO_LOWPASS:
     for i in range(0,len(df['traces'])):
       x = df['traces'][i]
-      if CONFIG_BUCKETSIZE is not None:
-        if savedDataIndex == CONFIG_BUCKETSIZE:
-          print("The bucket is full, not processing any more...!")
-          break
       traces[i] = butter_lowpass_filter(x,CONFIG_CUTOFF,CONFIG_SAMPLERATE,CONFIG_ORDER)
       data[i] = df['data'][i]
       data_out[i] = df['data_out'][i]
@@ -395,6 +355,3 @@ if __name__ == "__main__":
     sys.exit(0)
   print(("Saving %d records" % savedDataIndex))
   support.filemanager.save(CONFIG_OUTFILE,traces=traces[0:savedDataIndex],data=data[0:savedDataIndex],data_out=data_out[0:savedDataIndex])
-  if CONFIG_DISCARD:
-    print(("Discard piling %d records" % discardDataIndex))
-    support.filemanager.save(CONFIG_DISCARDPILE,traces=discard_traces[0:discardDataIndex],data=discard_data[0:discardDataIndex],data_out=discard_data_out[0:discardDataIndex])

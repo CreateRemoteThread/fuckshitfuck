@@ -68,9 +68,26 @@ class TraceManager:
     print("TraceManager: unmapBlocks couldn't unmap %d" % key)
     sys.exit(0)
 
+  def getSingleData(self,key):
+    (min_,max_,index_) = self.unmapBlocks(key)
+    return self.dataObj[index_].data[key - min_]
+
+  def getSingleDataOut(self,key):
+    (min_,max_,index_) = self.unmapBlocks(key)
+    return self.dataObj[index_].data_out[key - min_]
+
   def getSingleTrace(self,key):
     (min_,max_,index_) = self.unmapBlocks(key)
     return self.dataObj[index_].traces[key - min_]
+
+  def init_cache(self,trace,data,data_out):
+    self.cache_traces = numpy.array([trace])
+    self.cache_data = numpy.array([data])
+    self.cache_data_out = numpy.array([data_out])
+
+  def saveSingle(self,trace,data,data_out):
+    if self.cache_traces is None:
+      self.init_cache(trace,data,data_out) 
 
   def mapBlocks(self):
     self.blockMap = []
@@ -128,7 +145,10 @@ class TraceManager:
         return i
 
   def __init__(self,filename):
-    self.blockMap = None
+    self.cache_traces = None          # used for cache saving single traces
+    self.cache_data = None
+    self.cache_data_out = None
+    self.blockMap = None              # used for mapping indexes to mem arrays
     print("TraceManager: Initializing with filename %s" % filename)
     self.dataObj = {}
     self.fn = filename
