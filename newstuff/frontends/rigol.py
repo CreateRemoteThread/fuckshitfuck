@@ -1,9 +1,7 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
-The class :py:mod:`ds1054z.DS1054Z` - Easy communication with your scope
-========================================================================
-"""
+# converted from pklaus/ds1054z to embed into 
 
 import logging
 import re
@@ -93,19 +91,19 @@ class DS1054Z(vxi11.Instrument):
 
     def query(self, message, *args, **kwargs):
         """
-        Write a message to the scope and read back the answer.
+        Write a message to the self.scope and read back the answer.
         See :py:meth:`vxi11.Instrument.ask()` for optional parameters.
         """
         return self.ask(message, *args, **kwargs)
 
     def query_raw(self, message, *args, **kwargs):
         """
-        Write a message to the scope and read a (binary) answer.
+        Write a message to the self.scope and read a (binary) answer.
 
         This is the slightly modified version of :py:meth:`vxi11.Instrument.ask_raw()`.
         It takes a command message string and returns the answer as bytes.
 
-        :param str message: The SCPI command to send to the scope.
+        :param str message: The SCPI command to send to the self.scope.
         :return: Data read from the device
         :rtype: bytes
         """
@@ -128,14 +126,14 @@ class DS1054Z(vxi11.Instrument):
         Provides the values returned by the command ``:WAVeform:PREamble?``.
         They will be converted to float and int as appropriate.
 
-        Those values are essential if you want to convert BYTE data from the scope
-        to voltage readings or if you want to recreate the scope's
+        Those values are essential if you want to convert BYTE data from the self.scope
+        to voltage readings or if you want to recreate the self.scope's
         display content programmatically.
 
         This property is also accessible via the wrapper property :py:attr:`waveform_preamble_dict`
         where it returns a :py:obj:`dict` instead of a :py:obj:`tuple`.
 
-        This property will be fetched from the scope every time you access it.
+        This property will be fetched from the self.scope every time you access it.
 
         :return: (fmt, typ, pnts, cnt, xinc, xorig, xref, yinc, yorig, yref)
         :rtype: tuple of float and int values
@@ -170,7 +168,7 @@ class DS1054Z(vxi11.Instrument):
         Provides a dictionary with 10 entries corresponding to the
         tuple items of the property :py:attr:`waveform_preamble`.
 
-        This property will be fetched from the scope every time you access it.
+        This property will be fetched from the self.scope every time you access it.
 
         :return: {'fmt', 'typ', 'pnts', 'cnt', 'xinc', 'xorig', 'xref', 'yinc', 'yorig', 'yref'}
         :rtype: dict
@@ -185,10 +183,10 @@ class DS1054Z(vxi11.Instrument):
         The mode argument translates into a call to ``:WAVeform:MODE``
         setting up how many samples you want to read back. If you set it
         to normal mode, only the screen content samples will be returned.
-        In raw mode, the whole scope memory will be read out, which can
+        In raw mode, the whole self.scope memory will be read out, which can
         take many seconds depending on the current memory depth.
 
-        If you set mode to RAW, the scope will be stopped first.
+        If you set mode to RAW, the self.scope will be stopped first.
         Please start it again yourself, if you need to, afterwards.
 
         If you set mode to NORMal you will always get 1200 samples back.
@@ -235,11 +233,11 @@ class DS1054Z(vxi11.Instrument):
         This function distinguishes between requests for reading
         the waveform data currently being displayed on the screen
         or if you will be reading the internal memory.
-        If you set mode to RAW, the scope will be stopped first and
+        If you set mode to RAW, the self.scope will be stopped first and
         you will get the bytes from internal memory.
         (Please start it again yourself, if you need to, afterwards.)
         If you set the mode to MAXimum this function will return the
-        internal memory if the scope is stopped, and the screen
+        internal memory if the self.scope is stopped, and the screen
         memory otherwise.
 
         In case the internal memory will be read, the data request will
@@ -260,7 +258,7 @@ class DS1054Z(vxi11.Instrument):
 
     def _get_waveform_bytes_screen(self, channel, mode='NORMal'):
         """
-        This function returns the waveform bytes from the scope if you desire
+        This function returns the waveform bytes from the self.scope if you desire
         to read the bytes corresponding to the screen content.
         """
         channel = self._interpret_channel(channel)
@@ -308,7 +306,7 @@ class DS1054Z(vxi11.Instrument):
 
     def _get_waveform_bytes_internal(self, channel, mode='RAW', start = 1, end = None):
         """
-        This function returns the waveform bytes from the scope if you desire
+        This function returns the waveform bytes from the self.scope if you desire
         to read the bytes corresponding to the internal (deep) memory.
         """
         channel = self._interpret_channel(channel)
@@ -370,11 +368,11 @@ class DS1054Z(vxi11.Instrument):
     @property
     def timebase_offset(self):
         """
-        The timebase offset of the scope in seconds.
+        The timebase offset of the self.scope in seconds.
 
         You can change the timebase offset by assigning to this property:
 
-        >>> scope.timebase_offset = 200e-6
+        >>> self.scope.timebase_offset = 200e-6
 
         The possible values according to the programming manual:
 
@@ -389,7 +387,7 @@ class DS1054Z(vxi11.Instrument):
     @property
     def timebase_scale(self):
         """
-        The timebase scale of the scope in seconds.
+        The timebase scale of the self.scope in seconds.
 
         The possible values according to the programming guide:
 
@@ -398,7 +396,7 @@ class DS1054Z(vxi11.Instrument):
 
         You can change the timebase like this:
 
-        >>> scope.timebase_scale = 200E-9
+        >>> self.scope.timebase_scale = 200E-9
 
         The nearest possible value will be set.
         """
@@ -538,7 +536,7 @@ class DS1054Z(vxi11.Instrument):
         """
         The current memory depth of the oscilloscope.
         This value is the number of samples to expect when reading the
-        waveform data and depends on the status of the scope (running / stopped).
+        waveform data and depends on the status of the self.scope (running / stopped).
 
         Needed by :py:attr:`waveform_time_values`.
 
@@ -568,7 +566,7 @@ class DS1054Z(vxi11.Instrument):
     def memory_depth_internal_total(self):
         """
         The total number of samples in the **raw (=deep) memory** of the oscilloscope.
-        If it's running, the scope will be stopped temporarily when accessing this value.
+        If it's running, the self.scope will be stopped temporarily when accessing this value.
 
         This property will be updated every time you access it.
         """
@@ -592,7 +590,7 @@ class DS1054Z(vxi11.Instrument):
     @property
     def memory_depth(self):
         """
-        This maps to the aquisition memory depth the scope is currently set to.
+        This maps to the aquisition memory depth the self.scope is currently set to.
         In contrast to :py:attr:`memory_depth_curr_waveform`,
         :py:attr:`memory_depth_internal_currently_shown` and
         :py:attr:`memory_depth_internal_total`, this property
@@ -601,7 +599,7 @@ class DS1054Z(vxi11.Instrument):
 
         You can change the memory_depth like this:
 
-        >>> scope.memory_depth = 12e6
+        >>> self.scope.memory_depth = 12e6
 
         This will set the memory depth to 12M data points.
         Please note that changing the memory_depth is only possible when
@@ -651,7 +649,7 @@ class DS1054Z(vxi11.Instrument):
     @property
     def displayed_channels(self):
         """
-        The list of channels currently displayed on the scope.
+        The list of channels currently displayed on the self.scope.
         This property will be updated every time you access it.
         """
         channel_list = []
@@ -747,7 +745,7 @@ class DS1054Z(vxi11.Instrument):
         * 10mV, 20mV, 50mV, 100mV...100V (for a 10x probe).
 
         You can also set the scale to values in between those steps
-        (as with using the fine adjustment mode on the scope).
+        (as with using the fine adjustment mode on the self.scope).
 
         :param channel: The channel name (like CHAN1, ...). Alternatively specify the channel by its number (as integer).
         :type channel: int or str
@@ -781,3 +779,41 @@ def format_hex(byte_str):
         return ' '.join( [ "{:02X}".format(x)  for x in byte_str ] )
     else:
         return ' '.join( [ "{:02X}".format(ord(x))  for x in byte_str ] )
+
+# 
+class CaptureInterface():
+  def __init__(self):
+    print("Using Rigol Capture Interface")
+
+  def init(self):
+    print("Rigol: initializing self.scope")
+    try:
+      self.scope = DS1054Z("192.168.33.6")
+    except:
+      print("Scope error :(")
+      sys.exit(0)
+    self.scope.write(":STOP")
+    self.scope.write(":CHAN1:SCAL 0.050")
+    self.scope.write(":CHAN1:OFFS 0.000")
+    self.scope.write(":CHAN2:SCAL 5.0")
+    self.scope.write(":CHAN2:OFFS 0.0")
+    self.scope.write(":TRIG:MODE EDGE")
+    self.scope.write(":TRIG:EDGE:SOUR CHAN2")
+    self.scope.write(":TRIG:EDGE:LEV 2.0")
+    self.scope.write(":TRIG:EDGE:SWE SING")
+    self.scope.write(":WAV:SOUR CHAN1")
+    self.START_OFFSET = 0
+    self.END_OFFSET = 15000
+
+
+  def arm(self):
+    print("Rigol: arming")
+    self.scope.single()
+
+  def fetch(self):
+    self.scope.get_waveform_samples("CHAN1",mode="RAW",start=self.START_OFFSET+1,end=self.END_OFFSET)
+
+  def close(self):
+    self.scope.close()
+
+    

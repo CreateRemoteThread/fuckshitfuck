@@ -176,7 +176,7 @@ class DS1054Z(vxi11.Instrument):
         :rtype: dict
         """
         keys = 'fmt, typ, pnts, cnt, xinc, xorig, xref, yinc, yorig, yref'.split(', ')
-        return dict(list(zip(keys, self.waveform_preamble)))
+        return dict(zip(keys, self.waveform_preamble))
 
     def get_waveform_samples(self, channel, mode='NORMal', start=1, end=None):
         """
@@ -206,11 +206,11 @@ class DS1054Z(vxi11.Instrument):
 
         # ok, let's go safety checks
         if start < 1:
-          print("error: waveforms start at 1 because ~rigol~")
+          print "error: waveforms start at 1 because ~rigol~"
           return []
 
         if end is not None and ((end < start) or (end == start)):
-          print("error: end must be greater than start")
+          print "error: end must be greater than start"
           return []
 
         buff = self.get_waveform_bytes(channel, mode=mode, start=start, end=end)

@@ -2,6 +2,8 @@
 
 ![Just for fun](fun/cap.png)
 
+Please note (29 April 2020): A *major* rewrite of the acquisition frontend is in progress. This will supersede grab*.py and rigol-new.py, but will maintaining savegame compatibility via support.filemanager.
+
 The fuckshitfuck toolkit is a repository of code used for side channel acquisition, preprocessing and analysis, similar to the ChipWhisperer, but written ground-up as an (extremely successful) learning exercise.
 
 _Check the acquisition settings, including coupling type and ranges, before you begin capture._
