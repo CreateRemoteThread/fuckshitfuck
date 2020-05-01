@@ -4,6 +4,8 @@ import sys
 
 class CaptureInterface():
   def __init__(self):
+    self.config = {}
+    self.config["samplecount"] = 5000
     print("Acquisition frontend ready")
 
   def arm(self):

@@ -29,39 +29,83 @@ def acquireDriver(interfacename):
     drv = None
 
 def usage():
-  print("Usage code goes here.")
- 
+  print("capturebuddy")
+  print("  -f <frontend>: set the acquisition frontend")
+  print("  -d <driver>: set the logic driver")
+  print("  -c <cmdfile>: run commands from file")
+
+import uuid
+
+config = {}
+config["tracecount"] = 5
+config["samplecount"] = 15000
+config["writefile"] = "%s" % uuid.uuid4()
+
 def runCaptureTask():
-  global fe,drv
+  global fe,drv,config
   fe.init()
   drv.init(fe)
-  CONFIG_TRACECOUNT = 5
-  CONFIG_SAMPLECOUNT = 5000
-  traces = np.zeros((CONFIG_TRACECOUNT,CONFIG_SAMPLECOUNT),np.float32)
-  data = np.zeros((CONFIG_TRACECOUNT,16),np.uint8)         # RAND
-  data_out = np.zeros((CONFIG_TRACECOUNT,16),np.uint8)     # AUTN
-  for i in range(0,5):
+  traces = np.zeros((config["tracecount"],config["samplecount"]),np.float32)
+  data = np.zeros((config["tracecount"],16),np.uint8)         # RAND
+  data_out = np.zeros((config["tracecount"],16),np.uint8)     # AUTN
+  for i in range(0,config["tracecount"]):
+    print("Running job: %d/%d" % (i,config["tracecount"]))
     (next_rand, next_autn) = drv.drive()
     time.sleep(0.5)
     dataA = fe.capture()
     traces[i:] = dataA
     data[i:] = next_rand
     data_out[i:] = next_autn
-  support.filemanager.save("./lol123",traces=traces,data=data,data_out=data_out)   
+  support.filemanager.save(config["writefile"],traces=traces,data=data,data_out=data_out)
+
+def processCommand(c):
+  global fe, drv, config
+  tokens = c.split(" ")
+  if cmd in ("q","quit"):
+    print("bye!")
+    sys.exit(0)
+  elif cmd in ("r","run"):
+    runCaptureTask()
+  elif tokens[0] == "vars":
+    for i in config.keys():
+      print("%s=%s" % (i,config[i]))
+  elif tokens[0] == "fe.vars":
+    for i in fe.config.keys():
+      print("%s=%s" % (i,fe.config[i]))
+  elif tokens[0] == "drv.vars":
+    for i in drv.config.keys():
+      print("%s=%s" % (i,drv.config[i]))
+  elif tokens[0] == "set":
+    cmdx = " ".join(tokens[1:])
+    (varname,varval) = cmdx.split("=")
+    config[varname] = eval(varval)
+    fe.config[varname] = eval(varval)
+    drv.config[varname] = eval(varval)
+  elif tokens[0] == "fe.set":
+    cmdx = " ".join(tokens[1:])
+    (varname,varval) = cmdx.split("=")
+    fe.config[varname] = eval(varval)
+  elif tokens[0] == "drv.set":
+    cmdx = " ".join(tokens[1:])
+    (varname,varval) = cmdx.split("=")
+    drv.config[varname] = eval(varval)
+  else:
+    print("Unknown command %s" % cmd)
 
 if __name__ == "__main__":
   print("capturebuddy")
-  optlist, args = getopt.getopt(sys.argv[1:],"ha:d:s:",["help","acquire=","driver=","set="])
+  CMDFILE = None
+  optlist, args = getopt.getopt(sys.argv[1:],"hf:d:c:",["help","frontend=","driver=","cmdfile="])
   for arg,value in optlist:
     if arg in ("-h","--help"):
       usage()
       sys.exit(0)
-    elif arg in ("-a","--acquire"):
+    elif arg in ("-f","--frontend"):
       acquireInterface(value)
     elif arg in ("-d","--driver"):
       acquireDriver(value)
-    elif arg in ("-s","--set"):
-      setConfiguration(opt)
+    elif arg in ("-c","--cmdfile"):
+      CMDFILE = value
     else:
       print("Sorry, not implemented yet")
       sys.exit(0)
@@ -71,13 +115,12 @@ if __name__ == "__main__":
   elif drv is None:
     print("No driver backend, bye!")
     sys.exit(0)
+  if CMDFILE is not None:
+    f = open(CMDFILE,"r")
+    cmd_array = [d.rstrip() for d in f.readlines()]
+    for c in cmd_array:
+      processCommand(c)
+    f.close()
   while True:
     cmd = input(" > ").lstrip().rstrip()
-    if cmd in ("q","quit"):
-      print("bye!")
-      sys.exit(0)
-    elif cmd in ("r","run"):
-      runCaptureTask()
-    else:
-      print("Unknown command %s" % cmd)
- 
+    processCommand(cmd)

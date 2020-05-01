@@ -3,6 +3,7 @@
 
 class DriverInterface():
   def __init__(self):
+    self.config = {}
     pass
 
   def init(self):

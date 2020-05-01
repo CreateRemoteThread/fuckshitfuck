@@ -33,6 +33,7 @@ class SIMController:
 
 class DriverInterface():
   def __init__(self):
+    self.config = {}
     print("Using Smartcard Driver")
 
   def init(self,scope):

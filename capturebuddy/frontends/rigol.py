@@ -784,6 +784,8 @@ def format_hex(byte_str):
 class CaptureInterface():
   def __init__(self):
     print("Using Rigol Capture Interface")
+    self.config = {}
+    self.config["samplecount"] = 15000
 
   def init(self):
     print("Rigol: initializing self.scope")
@@ -802,13 +804,12 @@ class CaptureInterface():
     self.scope.write(":TRIG:EDGE:LEV 2.0")
     self.scope.write(":TRIG:EDGE:SWE SING")
     self.scope.write(":WAV:SOUR CHAN1")
-    self.START_OFFSET = 0
-    self.END_OFFSET = 5000
-
 
   def arm(self):
     print("Rigol: arming")
     self.scope.write(":STOP")
+    self.START_OFFSET = 0
+    self.END_OFFSET = self.config["samplecount"]
     self.scope.single()
 
   def capture(self):
