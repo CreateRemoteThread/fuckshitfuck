@@ -2,8 +2,6 @@
 
 ![Just for fun](fun/cap.png)
 
-Please note (29 April 2020): A *major* rewrite of the acquisition frontend is in progress. This will supersede grab*.py and rigol-new.py, but will maintaining savegame compatibility via support.filemanager.
-
 The fuckshitfuck toolkit is a repository of code used for side channel acquisition, preprocessing and analysis, similar to the ChipWhisperer, but written ground-up as an (extremely successful) learning exercise.
 
 _Check the acquisition settings, including coupling type and ranges, before you begin capture._
@@ -12,10 +10,8 @@ This toolkit comprises:
 
 - Normal Side Channels:
   - Acquisition:
-    - ./grab3.py, for acquisition from picoscope scopes
-    - ./rigol-new.py, for acquisition from rigol scopes
-    - ./grab-smartcard.py, for pcsc+picoscope acquisition from smartcards
-    - ./smartcards/grab-cw.py, for chipwhisperer synchronous sampling (broken, PLL input too slow)
+    - ./capturebuddy/capturebuddy.py, a capture front-end
+    - ./capturebuddy/triggerbuddy.py, an fpga triggering assistant
   - Preprocessing:
     - ./preprocessor.py, for temporal alignment of traces
   - Analysis:

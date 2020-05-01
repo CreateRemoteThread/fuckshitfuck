@@ -23,24 +23,25 @@ class SIMController:
     r,sw1,sw2 = self.c.transmit([0x00,0xC0,0x00,0x00] + [sw2])
     r,sw1,sw2 = self.c.transmit([0x00,0xB2,0x01,0x04] + [r[7]])
     r,sw1,sw2 = self.c.transmit([0x00,0xA4,0x04,0x04] + list(r[3:4 + r[3]]))
-    scope.arm()
     r,sw1,sw2 = self.c.transmit([0x00,0xC0,0x00,0x00] + [sw2])
     if rand is None and autn is None:
       authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + [0xaa] * 16 + [0x10] + [0xbb] * 16
     else:
       authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + rand + [0x10] + autn
+    scope.arm()
     r,sw1,sw2 = self.c.transmit(authcmd)
 
 class DriverInterface():
   def __init__(self):
     print("Using Smartcard Driver")
 
-  def init(self):
+  def init(self,scope):
     print("Smartcard: initializing")
     self.sc = SIMController()
-  
-    
-
-  def doOneIteration(self):
-    pass
-    
+    self.scope = scope
+     
+  def drive(self,data_in = None):
+    next_rand = [random.randint(0,255) for _ in range(16)]
+    next_autn = [random.randint(0,255) for _ in range(16)]
+    self.sc.french_apdu(next_rand,next_autn,self.scope)
+    return (next_rand,next_autn)

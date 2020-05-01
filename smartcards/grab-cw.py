@@ -7,6 +7,9 @@ from smartcard.CardConnectionObserver import ConsoleCardConnectionObserver
 from smartcard.Exceptions import CardRequestTimeoutException
 import random
 import numpy as np
+traces = np.zeros((CONFIG_TRACECOUNT,CONFIG_SAMPLECOUNT),np.float32)
+data = np.zeros((CONFIG_TRACECOUNT,16),np.uint8)         # RAND
+data_out = np.zeros((CONFIG_TRACECOUNT,16),np.uint8)     # AUTN
 import support.filemanager
 import time
 

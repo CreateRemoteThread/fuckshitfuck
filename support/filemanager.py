@@ -174,8 +174,12 @@ class TraceManager:
         if "=" not in fl:
           continue
         (opt,val) = fl.rstrip().split("=")
-        (real_opt,opt_num_s) = opt.split(",")
-        opt_num = int(opt_num_s)
+        if "," in opt:
+          (real_opt,opt_num_s) = opt.split(",")
+          opt_num = int(opt_num_s)
+        else:
+          real_opt = opt
+          opt_num = 0
         if opt_num not in self.dataObj.keys():
           self.dataObj[opt_num] = TraceSet(opt_num)
         if real_opt == "data_in":

@@ -803,15 +803,16 @@ class CaptureInterface():
     self.scope.write(":TRIG:EDGE:SWE SING")
     self.scope.write(":WAV:SOUR CHAN1")
     self.START_OFFSET = 0
-    self.END_OFFSET = 15000
+    self.END_OFFSET = 5000
 
 
   def arm(self):
     print("Rigol: arming")
+    self.scope.write(":STOP")
     self.scope.single()
 
-  def fetch(self):
-    self.scope.get_waveform_samples("CHAN1",mode="RAW",start=self.START_OFFSET+1,end=self.END_OFFSET)
+  def capture(self):
+    return self.scope.get_waveform_samples("CHAN1",mode="RAW",start=self.START_OFFSET+1,end=self.END_OFFSET)
 
   def close(self):
     self.scope.close()
