@@ -11,7 +11,9 @@ class SIMController:
     self.c = None      # fuck pyscard. seriously.
     pass
 
-  def french_apdu(self,rand=None,autn=None,scope=None,debug=False):
+  def french_apdu(self,rand=None,autn=None,scope=None,debug=False,trigger=None):
+    if trigger is not None:
+      trigger.disarm()
     self.cardrequest = CardRequest(timeout=5,cardType=AnyCardType())
     self.cardservice = self.cardrequest.waitforcard()
     if debug:
@@ -28,12 +30,15 @@ class SIMController:
       authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + [0xaa] * 16 + [0x10] + [0xbb] * 16
     else:
       authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + rand + [0x10] + autn
+    if trigger is not None:
+      trigger.arm()
     scope.arm()
     r,sw1,sw2 = self.c.transmit(authcmd)
 
 class DriverInterface():
   def __init__(self):
     self.config = {}
+    self.config["trigger"] = None
     print("Using Smartcard Driver")
 
   def init(self,scope):
@@ -44,5 +49,8 @@ class DriverInterface():
   def drive(self,data_in = None):
     next_rand = [random.randint(0,255) for _ in range(16)]
     next_autn = [random.randint(0,255) for _ in range(16)]
-    self.sc.french_apdu(next_rand,next_autn,self.scope)
+    self.sc.french_apdu(next_rand,next_autn,self.scope,trigger=self.config["trigger"])
     return (next_rand,next_autn)
+
+  def close(self):
+    pass

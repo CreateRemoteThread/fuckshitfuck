@@ -7,6 +7,7 @@ import uuid
 import time
 import random
 import numpy as np
+import triggerbuddy
 import support.filemanager
 
 fe = None
@@ -43,36 +44,55 @@ config["writefile"] = "%s" % uuid.uuid4()
 
 def runCaptureTask():
   global fe,drv,config
+  missedCount = 0
   fe.init()
   drv.init(fe)
   traces = np.zeros((config["tracecount"],config["samplecount"]),np.float32)
   data = np.zeros((config["tracecount"],16),np.uint8)         # RAND
   data_out = np.zeros((config["tracecount"],16),np.uint8)     # AUTN
   for i in range(0,config["tracecount"]):
-    print("Running job: %d/%d" % (i,config["tracecount"]))
+    print("Running job: %d/%d. %d missed" % (i,config["tracecount"],missedCount))
     (next_rand, next_autn) = drv.drive()
-    time.sleep(0.5)
+    time.sleep(3.0)
     dataA = fe.capture()
-    traces[i:] = dataA
+    if len(dataA) == 0:
+      print("Missed a trace!")
+      missedCount += 1
+      traces[i:] = np.zeros(config["samplecount"])
+    else:
+      traces[i:] = dataA
     data[i:] = next_rand
     data_out[i:] = next_autn
   support.filemanager.save(config["writefile"],traces=traces,data=data,data_out=data_out)
 
+trig = None
+
 def processCommand(c):
-  global fe, drv, config
+  global fe, drv, trig, config
   tokens = c.split(" ")
   if cmd in ("q","quit"):
+    fe.close()
+    drv.close()
     print("bye!")
     sys.exit(0)
+  elif tokens[0] in ("t","trig","trigger"):
+    if trig is None:
+      trig = triggerbuddy.TriggerBuddy()
+      config["trigger"] = trig
+      fe.config["trigger"] = trig
+      drv.config["trigger"] = trig
+    if len(tokens) == 1:
+      return
+    else:
+      tcmd = " ".join(tokens[1:])
+      trig.processCommand(tcmd)
   elif cmd in ("r","run"):
     runCaptureTask()
   elif tokens[0] == "vars":
     for i in config.keys():
       print("%s=%s" % (i,config[i]))
-  elif tokens[0] == "fe.vars":
     for i in fe.config.keys():
       print("%s=%s" % (i,fe.config[i]))
-  elif tokens[0] == "drv.vars":
     for i in drv.config.keys():
       print("%s=%s" % (i,drv.config[i]))
   elif tokens[0] == "set":

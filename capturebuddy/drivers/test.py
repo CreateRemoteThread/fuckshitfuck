@@ -4,11 +4,14 @@
 class DriverInterface():
   def __init__(self):
     self.config = {}
+    # reserved names: samplecount,tracecount,trigger
     pass
 
   def init(self):
     pass
 
-  def doOneIteration(self,in_text):
+  def drive(self,in_text=None):
     return (in_text,out_text)
-    
+
+  def close(self):
+    pass

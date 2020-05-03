@@ -14,4 +14,5 @@ class CaptureInterface():
   def disarm(self):
     print("Acquisition frontend disarmed")
 
-    
+  def close(self):
+    pass    

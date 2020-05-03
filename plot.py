@@ -270,6 +270,7 @@ if __name__ == "__main__":
         else:
           plt.show()
       else:
+        print(d[0:50])
         plt.plot(d)
   if PLOT_SHOWN is False:
     plt.title(TITLE)

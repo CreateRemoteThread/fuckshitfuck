@@ -8,7 +8,7 @@ rigol.py with your scope's IP Address (look for CaptureInterface) and run:
 
 ./capturebuddy.py -a rigol -d scard
 
-then, at the command prompt, hit "run" for 5 captures into lol123.traces
+then, at the command prompt, hit "run" for 5 captures into <uuid>.traces and uuid.data/
 
 ## extending
 

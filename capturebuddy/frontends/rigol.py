@@ -787,6 +787,7 @@ class CaptureInterface():
     self.config = {}
     self.config["samplecount"] = 15000
 
+  # mdepth = sameplrate * timebase * 12
   def init(self):
     print("Rigol: initializing self.scope")
     try:
@@ -796,7 +797,7 @@ class CaptureInterface():
       sys.exit(0)
     self.scope.write(":STOP")
     self.scope.write(":CHAN1:SCAL 0.050")
-    self.scope.write(":CHAN1:OFFS 0.000")
+    self.scope.write(":CHAN1:OFFS -3.000")
     self.scope.write(":CHAN2:SCAL 5.0")
     self.scope.write(":CHAN2:OFFS 0.0")
     self.scope.write(":TRIG:MODE EDGE")
@@ -804,16 +805,19 @@ class CaptureInterface():
     self.scope.write(":TRIG:EDGE:LEV 2.0")
     self.scope.write(":TRIG:EDGE:SWE SING")
     self.scope.write(":WAV:SOUR CHAN1")
+    self.scope.timebase_scale = 5E-3
 
   def arm(self):
     print("Rigol: arming")
-    self.scope.write(":STOP")
+    print("Seeding START_OFFSET")
     self.START_OFFSET = 0
     self.END_OFFSET = self.config["samplecount"]
     self.scope.single()
+    time.sleep(0.5)
 
   def capture(self):
-    return self.scope.get_waveform_samples("CHAN1",mode="RAW",start=self.START_OFFSET+1,end=self.END_OFFSET)
+    halftime = self.scope.memory_depth_curr_waveform / 2
+    return self.scope.get_waveform_samples("CHAN1",mode="RAW",start=halftime + self.START_OFFSET+1,end=halftime  +self.END_OFFSET)
 
   def close(self):
     self.scope.close()
