@@ -805,7 +805,7 @@ class CaptureInterface():
     self.scope.write(":TRIG:EDGE:LEV 2.0")
     self.scope.write(":TRIG:EDGE:SWE SING")
     self.scope.write(":WAV:SOUR CHAN1")
-    self.scope.timebase_scale = 5E-3
+    self.scope.timebase_scale = 10E-4
 
   def arm(self):
     print("Rigol: arming")
