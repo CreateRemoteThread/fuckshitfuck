@@ -18,7 +18,7 @@ class SIMController:
     pass
 
   def french_apdu(self,rand=None,autn=None,debug=False,trigger=None):
-    trigger.disarm()
+    # trigger.disarm()
     self.cardrequest = CardRequest(timeout=5,cardType=AnyCardType())
     self.cardservice = self.cardrequest.waitforcard()
     if debug:
@@ -36,10 +36,11 @@ class SIMController:
       authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + [0xaa] * 16 + [0x10] + [0xbb] * 16
     else:
       authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + rand + [0x10] + autn
-    trigger.arm()
+    # trigger.arm()
     r,sw1,sw2 = self.c.transmit(authcmd)
 
-  def nextg_apdu(self,rand=None,autn=None,debug=False):
+  def nextg_apdu(self,rand=None,autn=None,debug=False,trigger=None):
+    trigger.disarm()
     self.cardrequest = CardRequest(timeout=5,cardType=AnyCardType())
     self.cardservice = self.cardrequest.waitforcard()
     if debug:
@@ -62,6 +63,7 @@ class SIMController:
       authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + [0xaa] * 16 + [0x10] + [0xbb] * 16
     else:
       authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + rand + [0x10] + autn
+    trigger.arm()
     r,sw1,sw2 = self.c.transmit(authcmd)
 
   def fuzzFile(self,observer=False):
@@ -85,9 +87,9 @@ class SIMController:
 if __name__ == "__main__":
   sc = SIMController()
   t = triggerbuddy.TriggerBuddy()
-  t.processCommand("io 1")
-  # t.processCommand("clk 88000") # nextg
-  t.processCommand("clk 48000") # purple
+  # t.processCommand("io 1")
+  t.processCommand("clk 87255") # nextg
+  # t.processCommand("clk 48000") # purple
   print(" >> YOU MUST MANUALLY CAPTURE ON YOUR SCOPE <<") 
   print(" >> NO SCOPE AUTOMATION ON C = 1 <<") 
   next_rand = [random.randint(0,255) for _ in range(16)]
@@ -95,5 +97,6 @@ if __name__ == "__main__":
   str_rand = "".join(["%02x" % _ for _ in next_rand])
   str_autn = "".join(["%02x" % _ for _ in next_autn])
   print("%s:%s" % (str_rand,str_autn))
-  sc.french_apdu(next_rand,next_autn,debug=True,trigger=t)
+  # sc.french_apdu(next_rand,next_autn,debug=True,trigger=None)
+  sc.nextg_apdu(next_rand,next_autn,debug=True,trigger=t)
   sys.exit(0)

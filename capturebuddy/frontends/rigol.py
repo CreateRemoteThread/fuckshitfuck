@@ -780,7 +780,6 @@ def format_hex(byte_str):
     else:
         return ' '.join( [ "{:02X}".format(ord(x))  for x in byte_str ] )
 
-# 
 class CaptureInterface():
   def __init__(self):
     print("Using Rigol Capture Interface")
@@ -797,7 +796,8 @@ class CaptureInterface():
       sys.exit(0)
     self.scope.write(":STOP")
     self.scope.write(":CHAN1:SCAL 0.050")
-    self.scope.write(":CHAN1:OFFS -3.000")
+    # self.scope.write(":CHAN1:OFFS -3.000") ## 3v atmel
+    self.scope.write(":CHAN1:OFFS -1.800")
     self.scope.write(":CHAN2:SCAL 5.0")
     self.scope.write(":CHAN2:OFFS 0.0")
     self.scope.write(":TRIG:MODE EDGE")
@@ -805,7 +805,7 @@ class CaptureInterface():
     self.scope.write(":TRIG:EDGE:LEV 2.0")
     self.scope.write(":TRIG:EDGE:SWE SING")
     self.scope.write(":WAV:SOUR CHAN1")
-    self.scope.timebase_scale = 10E-4
+    # self.scope.timebase_scale = 10E-4
 
   def arm(self):
     print("Rigol: arming")
