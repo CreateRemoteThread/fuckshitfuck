@@ -64,6 +64,7 @@ class SIMController:
     else:
       authcmd = [0x00, 0x88, 0x00, 0x81, 0x22, 0x10] + rand + [0x10] + autn
     trigger.arm()
+    print("Arming")
     r,sw1,sw2 = self.c.transmit(authcmd)
 
   def fuzzFile(self,observer=False):
@@ -88,7 +89,9 @@ if __name__ == "__main__":
   sc = SIMController()
   t = triggerbuddy.TriggerBuddy()
   # t.processCommand("io 1")
-  t.processCommand("clk 87255") # nextg
+  t.processCommand("io 1")
+  t.processCommand("clk 48000") # nextg
+  t.processCommand("ns 1") # nextg
   # t.processCommand("clk 48000") # purple
   print(" >> YOU MUST MANUALLY CAPTURE ON YOUR SCOPE <<") 
   print(" >> NO SCOPE AUTOMATION ON C = 1 <<") 
